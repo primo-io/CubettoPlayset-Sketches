@@ -49,7 +49,6 @@
 
 #include <AccelStepper.h>
 #include <SPI.h>
-#include <Mcp23s17.h>
 #include "nRF24L01.h"
 #include "RF24.h"
 #include "printf.h"
