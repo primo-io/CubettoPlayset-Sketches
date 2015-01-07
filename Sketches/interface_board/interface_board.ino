@@ -67,10 +67,10 @@ char check_button(char button_to_check);
 #define PRIMO_GPIOEXP4_SS_PIN 12
 
 // Instantiate Mcp23s17 objects
-MCP23S17 Line1_Mcp23s17(&SPI, PRIMO_GPIOEXP1_SS_PIN, 0);
-MCP23S17 Line2_Mcp23s17(&SPI, PRIMO_GPIOEXP2_SS_PIN, 0);
-MCP23S17 Line3_Mcp23s17(&SPI, PRIMO_GPIOEXP3_SS_PIN, 0);
-MCP23S17 Line4_Mcp23s17(&SPI, PRIMO_GPIOEXP4_SS_PIN, 0);
+MCP23S17 gpioExp1(&SPI, PRIMO_GPIOEXP1_SS_PIN, 0);
+MCP23S17 gpioExp2(&SPI, PRIMO_GPIOEXP2_SS_PIN, 0);
+MCP23S17 gpioExp3(&SPI, PRIMO_GPIOEXP3_SS_PIN, 0);
+MCP23S17 gpioExp4(&SPI, PRIMO_GPIOEXP4_SS_PIN, 0);
 
 // Remove // comments from following line to enable debug tracing.
 #define DEBUG_MODE 1
@@ -173,28 +173,28 @@ void setup (void)
   attachInterrupt(1, check_radio, FALLING);
 
 
-  // set up GPIO
-  Line1_Mcp23s17.begin();
-  Line2_Mcp23s17.begin();
-  Line3_Mcp23s17.begin();
-  Line4_Mcp23s17.begin();
+  // Set up all the GPIO expanders
+  gpioExp1.begin();
+  gpioExp2.begin();
+  gpioExp3.begin();
+  gpioExp4.begin();
   
-  Line1_Mcp23s17.pinMode(3, OUTPUT);
-  Line1_Mcp23s17.pinMode(7, OUTPUT);
-  Line1_Mcp23s17.pinMode(11, OUTPUT);
-  Line1_Mcp23s17.pinMode(15, OUTPUT);
-  Line2_Mcp23s17.pinMode(3, OUTPUT);
-  Line2_Mcp23s17.pinMode(7, OUTPUT);
-  Line2_Mcp23s17.pinMode(11, OUTPUT);
-  Line2_Mcp23s17.pinMode(15, OUTPUT);
-  Line3_Mcp23s17.pinMode(3, OUTPUT);
-  Line3_Mcp23s17.pinMode(7, OUTPUT);
-  Line3_Mcp23s17.pinMode(11, OUTPUT);
-  Line3_Mcp23s17.pinMode(15, OUTPUT);
-  Line4_Mcp23s17.pinMode(3, OUTPUT);
-  Line4_Mcp23s17.pinMode(7, OUTPUT);
-  Line4_Mcp23s17.pinMode(11, OUTPUT);
-  Line4_Mcp23s17.pinMode(15, OUTPUT);
+  gpioExp1.pinMode(3, OUTPUT);
+  gpioExp1.pinMode(7, OUTPUT);
+  gpioExp1.pinMode(11, OUTPUT);
+  gpioExp1.pinMode(15, OUTPUT);
+  gpioExp2.pinMode(3, OUTPUT);
+  gpioExp2.pinMode(7, OUTPUT);
+  gpioExp2.pinMode(11, OUTPUT);
+  gpioExp2.pinMode(15, OUTPUT);
+  gpioExp3.pinMode(3, OUTPUT);
+  gpioExp3.pinMode(7, OUTPUT);
+  gpioExp3.pinMode(11, OUTPUT);
+  gpioExp3.pinMode(15, OUTPUT);
+  gpioExp4.pinMode(3, OUTPUT);
+  gpioExp4.pinMode(7, OUTPUT);
+  gpioExp4.pinMode(11, OUTPUT);
+  gpioExp4.pinMode(15, OUTPUT);
   
   // This code always sends the same movement commands.
   initialise_packet();
@@ -302,10 +302,10 @@ void loop (void)
 
   current_element = 8; // set to first movement element of the packet
   terminated = 0; // set at the first empty position to indicate end of the sequence#
-  debug_printf("hall1 = %X\r\n", Line1_Mcp23s17.readPort());
-  debug_printf("hall2 = %X\r\n", Line2_Mcp23s17.readPort());
-  debug_printf("hall3 = %X\r\n", Line3_Mcp23s17.readPort());
-  debug_printf("hall4 = %X\r\n", Line4_Mcp23s17.readPort());
+  debug_printf("hall1 = %X\r\n", gpioExp1.readPort());
+  debug_printf("hall2 = %X\r\n", gpioExp2.readPort());
+  debug_printf("hall3 = %X\r\n", gpioExp3.readPort());
+  debug_printf("hall4 = %X\r\n", gpioExp4.readPort());
 
   for (button = 1; button <= PRIMO_MAX_BUTTON; button++)
   {
@@ -590,87 +590,87 @@ char check_button (char button_to_check)
   switch (button_to_check)
   {
     case 1:
-      hall_response = Line1_Mcp23s17.readPort();
+      hall_response = gpioExp1.readPort();
       button = (hall_response & 0x0F);
       break;
 
     case 2:
-      hall_response = Line1_Mcp23s17.readPort();
+      hall_response = gpioExp1.readPort();
       button = (hall_response >> 4) & 0x0F;
       break;
 
     case 3:
-      hall_response = Line1_Mcp23s17.readPort();
+      hall_response = gpioExp1.readPort();
       button = (hall_response >> 8) & 0x0F;
       break;
 
     case 4:
-      hall_response = Line1_Mcp23s17.readPort();
+      hall_response = gpioExp1.readPort();
       button = (hall_response >> 12) & 0x0F;
       break;
 
     case 5:
-      hall_response = Line2_Mcp23s17.readPort();
+      hall_response = gpioExp2.readPort();
       button = (hall_response) & 0x0F;
       invert_magnet = 1;
       break;
 
     case 6:
-      hall_response = Line2_Mcp23s17.readPort();
+      hall_response = gpioExp2.readPort();
       button = (hall_response >> 4) & 0x0F;
       invert_magnet = 1;
       break;
 
     case 7:
-      hall_response = Line2_Mcp23s17.readPort();
+      hall_response = gpioExp2.readPort();
       button = (hall_response >> 8) & 0x0F;
       invert_magnet = 1;
       break;
 
     case 8:
-      hall_response = Line2_Mcp23s17.readPort();
+      hall_response = gpioExp2.readPort();
       button = (hall_response >> 12) & 0x0F;
       invert_magnet = 1;
       twisted = 1;
       break;
 
     case 9:
-      hall_response = Line3_Mcp23s17.readPort();
+      hall_response = gpioExp3.readPort();
       button = (hall_response) & 0x0F;
       break;
 
     case 10:
-      hall_response = Line3_Mcp23s17.readPort();
+      hall_response = gpioExp3.readPort();
       button = (hall_response >> 4) & 0x0F;
       break;
 
     case 11:
-      hall_response = Line3_Mcp23s17.readPort();
+      hall_response = gpioExp3.readPort();
       button = (hall_response >> 8) & 0x0F;
       break;
 
     case 12:
-      hall_response = Line3_Mcp23s17.readPort();
+      hall_response = gpioExp3.readPort();
       button = (hall_response >> 12) & 0x0F;
       break;
 
     case 13:
-      hall_response = Line4_Mcp23s17.readPort();
+      hall_response = gpioExp4.readPort();
       button = (hall_response) & 0x0F;
       break;
 
     case 14:
-      hall_response = Line4_Mcp23s17.readPort();
+      hall_response = gpioExp4.readPort();
       button = (hall_response >> 4) & 0x0F;
       break;
 
     case 15:
-      hall_response = Line4_Mcp23s17.readPort();
+      hall_response = gpioExp4.readPort();
       button = (hall_response >> 8) & 0x0F;
       break;
 
     case 16:
-      hall_response = Line4_Mcp23s17.readPort();
+      hall_response = gpioExp4.readPort();
       button = (hall_response >> 12) & 0x0F;
       break;
 
@@ -735,67 +735,67 @@ void write_led (char led_number, char onoff)
   switch (led_number)
   {
     case 1:
-      Line1_Mcp23s17.digitalWrite(3, 1 - onoff);
+      gpioExp1.digitalWrite(3, 1 - onoff);
       break;
 
     case 2:
-      Line1_Mcp23s17.digitalWrite(7, 1 - onoff);
+      gpioExp1.digitalWrite(7, 1 - onoff);
       break;
 
     case 3:
-      Line1_Mcp23s17.digitalWrite(11, 1 - onoff);
+      gpioExp1.digitalWrite(11, 1 - onoff);
       break;
 
     case 4:
-      Line1_Mcp23s17.digitalWrite(15, 1 - onoff);
+      gpioExp1.digitalWrite(15, 1 - onoff);
       break;
 
     case 5:
-      Line2_Mcp23s17.digitalWrite(3, 1 - onoff);
+      gpioExp2.digitalWrite(3, 1 - onoff);
       break;
 
     case 6:
-      Line2_Mcp23s17.digitalWrite(7, 1 - onoff);
+      gpioExp2.digitalWrite(7, 1 - onoff);
       break;
 
     case 7:
-      Line2_Mcp23s17.digitalWrite(11, 1 - onoff);
+      gpioExp2.digitalWrite(11, 1 - onoff);
       break;
 
     case 8:
-      Line2_Mcp23s17.digitalWrite(15, 1 - onoff);
+      gpioExp2.digitalWrite(15, 1 - onoff);
       break;
 
     case 9:
-      Line3_Mcp23s17.digitalWrite(3, 1 - onoff);
+      gpioExp3.digitalWrite(3, 1 - onoff);
       break;
 
     case 10:
-      Line3_Mcp23s17.digitalWrite(7, 1 - onoff);
+      gpioExp3.digitalWrite(7, 1 - onoff);
       break;
 
     case 11:
-      Line3_Mcp23s17.digitalWrite(11, 1 - onoff);
+      gpioExp3.digitalWrite(11, 1 - onoff);
       break;
 
     case 12:
-      Line3_Mcp23s17.digitalWrite(15, 1 - onoff);
+      gpioExp3.digitalWrite(15, 1 - onoff);
       break;
 
     case 13:
-      Line4_Mcp23s17.digitalWrite(3, 1 - onoff);
+      gpioExp4.digitalWrite(3, 1 - onoff);
       break;
 
     case 14:
-      Line4_Mcp23s17.digitalWrite(7, 1 - onoff);
+      gpioExp4.digitalWrite(7, 1 - onoff);
       break;
 
     case 15:
-      Line4_Mcp23s17.digitalWrite(11, 1 - onoff);
+      gpioExp4.digitalWrite(11, 1 - onoff);
       break;
 
     case 16:
-      Line4_Mcp23s17.digitalWrite(15, 1 - onoff);
+      gpioExp4.digitalWrite(15, 1 - onoff);
       break;
   }
 }
