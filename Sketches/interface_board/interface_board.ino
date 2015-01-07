@@ -44,7 +44,7 @@
 #include "nRF24L01.h"
 #include "RF24.h"
 #include "printf.h"
-#include <Mcp23s17.h>
+#include <MCP23S17.h>
 
 
 // version numbering
@@ -68,10 +68,10 @@ char check_button(char button_to_check);
 #define LINE4_SS_PIN 12
 
 // Instantiate Mcp23s17 objects
-MCP23S17 Line1_Mcp23s17 = MCP23S17( LINE1_SS_PIN );
-MCP23S17 Line2_Mcp23s17 = MCP23S17( LINE2_SS_PIN );
-MCP23S17 Line3_Mcp23s17 = MCP23S17( LINE3_SS_PIN );
-MCP23S17 Line4_Mcp23s17 = MCP23S17( LINE4_SS_PIN );
+MCP23S17 Line1_Mcp23s17(&SPI, LINE1_SS_PIN, 0);
+MCP23S17 Line2_Mcp23s17(&SPI, LINE2_SS_PIN, 0);
+MCP23S17 Line3_Mcp23s17(&SPI, LINE3_SS_PIN, 0);
+MCP23S17 Line4_Mcp23s17(&SPI, LINE4_SS_PIN, 0);
 
 // Remove // comments from following line to enable debug tracing.
 #define DEBUG_MODE 1
@@ -185,10 +185,10 @@ void setup(void)
   attachInterrupt(1, check_radio, FALLING);
   
   // set up GPIO
-  Line1_Mcp23s17.pinMode(INPUT);
-  Line2_Mcp23s17.pinMode(INPUT);
-  Line3_Mcp23s17.pinMode(INPUT);
-  Line4_Mcp23s17.pinMode(INPUT);
+  Line1_Mcp23s17.begin();
+  Line2_Mcp23s17.begin();
+  Line3_Mcp23s17.begin();
+  Line4_Mcp23s17.begin();
   
   Line1_Mcp23s17.pinMode(3,OUTPUT);
   Line1_Mcp23s17.pinMode(7,OUTPUT);
@@ -302,10 +302,10 @@ void loop(void)
   
  current_element = 8; // set to first movement element of the packet
  terminated = 0; // set at the first empty position to indicate end of the sequence#
- debug_printf("hall1 = %X\r\n",Line1_Mcp23s17.digitalRead(0));
- debug_printf("hall2 = %X\r\n",Line2_Mcp23s17.digitalRead(0));
- debug_printf("hall3 = %X\r\n",Line3_Mcp23s17.digitalRead(0));
- debug_printf("hall4 = %X\r\n",Line4_Mcp23s17.digitalRead(0));
+ debug_printf("hall1 = %X\r\n",Line1_Mcp23s17.readPort());
+ debug_printf("hall2 = %X\r\n",Line2_Mcp23s17.readPort());
+ debug_printf("hall3 = %X\r\n",Line3_Mcp23s17.readPort());
+ debug_printf("hall4 = %X\r\n",Line4_Mcp23s17.readPort());
  for(button=1; button<=MAX_BUTTON; button++)
  {
      if (!terminated)
@@ -559,72 +559,72 @@ char check_button(char button_to_check)
   switch (button_to_check)
     {
       case 1:
-        hall_response = Line1_Mcp23s17.digitalRead(0);
+        hall_response = Line1_Mcp23s17.readPort();
         button = (hall_response & 0x0f);
         break;
       case 2:
-        hall_response = Line1_Mcp23s17.digitalRead(0);
+        hall_response = Line1_Mcp23s17.readPort();
         button = (hall_response >> 4) & 0x0f;
         break;
        case 3:
-        hall_response = Line1_Mcp23s17.digitalRead(0);
+        hall_response = Line1_Mcp23s17.readPort();
         button = (hall_response >> 8) & 0x0f;
         break;
        case 4:
-        hall_response = Line1_Mcp23s17.digitalRead(0);
+        hall_response = Line1_Mcp23s17.readPort();
         button = (hall_response >> 12) & 0x0f;
         break;
        case 5:
-        hall_response = Line2_Mcp23s17.digitalRead(0);
+        hall_response = Line2_Mcp23s17.readPort();
         button = (hall_response) & 0x0f;
         invert_magnet = 1;
         break;
        case 6:
-        hall_response = Line2_Mcp23s17.digitalRead(0);
+        hall_response = Line2_Mcp23s17.readPort();
         button = (hall_response >> 4) & 0x0f;
         invert_magnet = 1;
         break;
        case 7:
-        hall_response = Line2_Mcp23s17.digitalRead(0);
+        hall_response = Line2_Mcp23s17.readPort();
         button = (hall_response >> 8) & 0x0f;
         invert_magnet = 1;
         break;
        case 8:
-        hall_response = Line2_Mcp23s17.digitalRead(0);
+        hall_response = Line2_Mcp23s17.readPort();
         button = (hall_response >> 12) & 0x0f;
         invert_magnet = 1;
         twisted = 1;
         break;
        case 9:
-        hall_response = Line3_Mcp23s17.digitalRead(0);
+        hall_response = Line3_Mcp23s17.readPort();
         button = (hall_response) & 0x0f;
         break;
        case 10:
-        hall_response = Line3_Mcp23s17.digitalRead(0);
+        hall_response = Line3_Mcp23s17.readPort();
         button = (hall_response >> 4) & 0x0f;
         break;
        case 11:
-        hall_response = Line3_Mcp23s17.digitalRead(0);
+        hall_response = Line3_Mcp23s17.readPort();
         button = (hall_response >> 8) & 0x0f;
         break;
        case 12:
-        hall_response = Line3_Mcp23s17.digitalRead(0);
+        hall_response = Line3_Mcp23s17.readPort();
         button = (hall_response >> 12) & 0x0f;
         break;
        case 13:
-        hall_response = Line4_Mcp23s17.digitalRead(0);
+        hall_response = Line4_Mcp23s17.readPort();
         button = (hall_response) & 0x0f;
         break;
        case 14:
-        hall_response = Line4_Mcp23s17.digitalRead(0);
+        hall_response = Line4_Mcp23s17.readPort();
         button = (hall_response >> 4) & 0x0f;
         break;
        case 15:
-        hall_response = Line4_Mcp23s17.digitalRead(0);
+        hall_response = Line4_Mcp23s17.readPort();
         button = (hall_response >> 8) & 0x0f;
         break;
        case 16:
-        hall_response = Line4_Mcp23s17.digitalRead(0);
+        hall_response = Line4_Mcp23s17.readPort();
         button = (hall_response >> 12) & 0x0f;
         break;
       default:
