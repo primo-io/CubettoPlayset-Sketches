@@ -47,30 +47,30 @@
 
 
 // version numbering
-#define VERSION 2
+#define PRIMO_VERSION 2
 
 // define magnetic switches
-#define MAGNET_NONE     0
-#define MAGNET_FORWARD  1
-#define MAGNET_RIGHT    2
-#define MAGNET_LEFT     3
-#define MAGNET_FUNCTION 4
-#define MAGNET_ERR      5
+#define PRIMO_MAGNET_NONE     0
+#define PRIMO_MAGNET_FORWARD  1
+#define PRIMO_MAGNET_RIGHT    2
+#define PRIMO_MAGNET_LEFT     3
+#define PRIMO_MAGNET_FUNCTION 4
+#define PRIMO_MAGNET_ERR      5
 
 void write_led(char led_number, char onoff);
 char check_button(char button_to_check);
 
 // define SS pins for GPIO expanders
-#define LINE1_SS_PIN 9
-#define LINE2_SS_PIN 10
-#define LINE3_SS_PIN 11
-#define LINE4_SS_PIN 12
+#define PRIMO_GPIOEXP1_SS_PIN 9
+#define PRIMO_GPIOEXP2_SS_PIN 10
+#define PRIMO_GPIOEXP3_SS_PIN 11
+#define PRIMO_GPIOEXP4_SS_PIN 12
 
 // Instantiate Mcp23s17 objects
-MCP23S17 Line1_Mcp23s17(&SPI, LINE1_SS_PIN, 0);
-MCP23S17 Line2_Mcp23s17(&SPI, LINE2_SS_PIN, 0);
-MCP23S17 Line3_Mcp23s17(&SPI, LINE3_SS_PIN, 0);
-MCP23S17 Line4_Mcp23s17(&SPI, LINE4_SS_PIN, 0);
+MCP23S17 Line1_Mcp23s17(&SPI, PRIMO_GPIOEXP1_SS_PIN, 0);
+MCP23S17 Line2_Mcp23s17(&SPI, PRIMO_GPIOEXP2_SS_PIN, 0);
+MCP23S17 Line3_Mcp23s17(&SPI, PRIMO_GPIOEXP3_SS_PIN, 0);
+MCP23S17 Line4_Mcp23s17(&SPI, PRIMO_GPIOEXP4_SS_PIN, 0);
 
 // Remove // comments from following line to enable debug tracing.
 #define DEBUG_MODE 1
@@ -84,8 +84,8 @@ MCP23S17 Line4_Mcp23s17(&SPI, LINE4_SS_PIN, 0);
 // The nRF24l01 can accept up to 32 bytes in a single radio packet,
 // The comms protocol is designed to encapsulate a complete set of Primo movement commands
 // in one packet along with an identifier for all Primo's, and a unique identifier for this Primo.
-#define NRF24L01_MAX_PACKET_SIZE 32
-static char packet[NRF24L01_MAX_PACKET_SIZE];
+#define PRIMO_NRF24L01_MAX_PACKET_SIZE 32
+static char packet[PRIMO_NRF24L01_MAX_PACKET_SIZE];
 
 // This 32-bit value is the identifier for ANY 'Primo'.
 // It is inserted into every radio packet sent by ANY Primo.
@@ -103,10 +103,10 @@ static long primo_random = 0;
 // One byte has been used for each movement command.
 // This allows extra space for future meta-data (e.g. position ordinal),
 // or extra commands (e.g. BACK, 45TURN etc).
-#define STOP    0x00
-#define FORWARD 0x01
-#define LEFT    0x02
-#define RIGHT   0x03
+#define PRIMO_COMMAND_STOP    0x00
+#define PRIMO_COMMAND_FORWARD 0x01
+#define PRIMO_COMMAND_LEFT    0x02
+#define PRIMO_COMMAND_RIGHT   0x03
 
 
 //
@@ -115,8 +115,8 @@ static long primo_random = 0;
 
 // The Olimex 32u4 Leanoardo board user-button is defined here, because the original Leonardo
 // board doesn't have a button by default and there is no pin definition for port E2 in the pins_arduino.h header
-#define BBIT (PIND & B00000001) != 0    // Check if the button has been pressed 
-#define BUTTONINPUT DDRD &= B11111110   // Initialize the port
+#define PRIMO_BBIT (PIND & B00000001) != 0    // Check if the button has been pressed 
+#define PRIMO_BUTTONINPUT DDRD &= B11111110   // Initialize the port
 // A better solution would be to have the user-button acting through an interrupt,
 // as this would allow the Atmel uC (and the nRF24l01) to sleep between button-presses, and conserve battery power.
 
@@ -139,7 +139,7 @@ void check_radio(void);
 void setup (void)
 {
   // Initialize the user-button.
-  BUTTONINPUT;
+  PRIMO_BUTTONINPUT;
 
 
   //
@@ -150,7 +150,7 @@ void setup (void)
   printf_begin();
 
   //while (Serial.read() == -1)
-  debug_printf("ROLE: Primo - Version %d\n\r", VERSION);
+  debug_printf("ROLE: Primo - Version %d\n\r", PRIMO_VERSION);
 
 
   //
@@ -234,20 +234,20 @@ int movement_delay;
 
 char led_fn_terminate;
 
-#define MAX_BUTTON 28
+#define PRIMO_MAX_BUTTON 28
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void loop (void)
 {
   // Loop until the user-button pressed.
-  //debug_printf("wait for !BBIT");
-  //while(!BBIT)
+  //debug_printf("wait for !PRIMO_BBIT");
+  //while(!PRIMO_BBIT)
   //{
-  //  printf("PIND = %x\n\r",PIND);
+  //  printf("PIND = %x\n\r", PIND);
   //  delay(1000);
   //}
-  //debug_printf("!BBIT finished");
+  //debug_printf("!PRIMO_BBIT finished");
 
   // switch all LEDs off
   for (i = 1; i <= 16; i++)
@@ -255,29 +255,29 @@ void loop (void)
     write_led(i, 0);
   }
 
-  while (BBIT)
+  while (PRIMO_BBIT)
   {
     for (button = 1; button <= 16; button++)
     {
       switch (check_button(button))
       {
-        case MAGNET_FORWARD:
+        case PRIMO_MAGNET_FORWARD:
           write_led(button, 1);
           break;
 
-        case MAGNET_RIGHT:
+        case PRIMO_MAGNET_RIGHT:
           write_led(button, 1);
           break;
 
-        case MAGNET_LEFT:
+        case PRIMO_MAGNET_LEFT:
           write_led(button, 1);
           break;     
 
-        case MAGNET_FUNCTION:
+        case PRIMO_MAGNET_FUNCTION:
           write_led(button, 1);
           break;
 
-        case MAGNET_NONE:
+        case PRIMO_MAGNET_NONE:
           write_led(button, 0);
           break;
 
@@ -292,7 +292,7 @@ void loop (void)
   //debug_printf("Finished sending\n\r");
 
   // Loop until the user-button is released - put LEDs on as magnets are fitted
-  while(!BBIT) {}
+  while(!PRIMO_BBIT) {}
  
   //
   // button is released, now calculate the packet to send
@@ -307,39 +307,39 @@ void loop (void)
   debug_printf("hall3 = %X\r\n", Line3_Mcp23s17.readPort());
   debug_printf("hall4 = %X\r\n", Line4_Mcp23s17.readPort());
 
-  for (button = 1; button <= MAX_BUTTON; button++)
+  for (button = 1; button <= PRIMO_MAX_BUTTON; button++)
   {
     if (!terminated)
     {
       switch (check_button(button))
       {
-        case MAGNET_FORWARD:
-          packet[current_element++] = FORWARD;
+        case PRIMO_MAGNET_FORWARD:
+          packet[current_element++] = PRIMO_COMMAND_FORWARD;
           break;
 
-        case MAGNET_RIGHT:
-          packet[current_element++] = RIGHT;
+        case PRIMO_MAGNET_RIGHT:
+          packet[current_element++] = PRIMO_COMMAND_RIGHT;
           break;
 
-        case MAGNET_LEFT:
-          packet[current_element++] = LEFT; 
+        case PRIMO_MAGNET_LEFT:
+          packet[current_element++] = PRIMO_COMMAND_LEFT; 
           break;     
 
-        case MAGNET_FUNCTION:
+        case PRIMO_MAGNET_FUNCTION:
           for (function_element = 1; function_element <= 4; function_element++)
           {
             switch (check_button(12 + function_element))
             {
-              case MAGNET_FORWARD:
-                packet[current_element++] = FORWARD;
+              case PRIMO_MAGNET_FORWARD:
+                packet[current_element++] = PRIMO_COMMAND_FORWARD;
                 break;
 
-              case MAGNET_RIGHT:
-                packet[current_element++] = RIGHT;
+              case PRIMO_MAGNET_RIGHT:
+                packet[current_element++] = PRIMO_COMMAND_RIGHT;
                 break;
 
-              case MAGNET_LEFT:
-                packet[current_element++] = LEFT; 
+              case PRIMO_MAGNET_LEFT:
+                packet[current_element++] = PRIMO_COMMAND_LEFT; 
                 break;
 
               default:
@@ -348,7 +348,7 @@ void loop (void)
           }
           break;
 
-        case MAGNET_NONE:
+        case PRIMO_MAGNET_NONE:
           terminated = 1;
           break;
 
@@ -358,13 +358,13 @@ void loop (void)
     }
     else   // terminated
     {
-      packet[current_element++] = STOP;
+      packet[current_element++] = PRIMO_COMMAND_STOP;
     }
   }
 
   // we have filled up the packet with commands, add stops to the end
-  while (current_element < MAX_BUTTON)
-    packet[current_element++] = STOP;
+  while (current_element < PRIMO_MAX_BUTTON)
+    packet[current_element++] = PRIMO_COMMAND_STOP;
 
   debug_printf("Packet: ");
 
@@ -377,11 +377,11 @@ void loop (void)
   //TODO - why do I have to send twice? 
 
   debug_printf("\n\rNow sending packet\n\r");
-  radio.startWrite(packet, NRF24L01_MAX_PACKET_SIZE);
+  radio.startWrite(packet, PRIMO_NRF24L01_MAX_PACKET_SIZE);
   debug_printf("Finished sending\n\r");
 
   debug_printf("\n\rNow sending packet\n\r");
-  radio.startWrite(packet, NRF24L01_MAX_PACKET_SIZE);
+  radio.startWrite(packet, PRIMO_NRF24L01_MAX_PACKET_SIZE);
   debug_printf("Finished sending\n\r");
 
   // start lighting LEDs while we wait for the packet to be processed
@@ -398,22 +398,22 @@ void loop (void)
     {
       switch (check_button(button))
       {
-        case MAGNET_FORWARD:
+        case PRIMO_MAGNET_FORWARD:
           write_led(button, 0);
           movement_delay = 4500; // delay moving forward
           break;
 
-        case MAGNET_RIGHT:
+        case PRIMO_MAGNET_RIGHT:
           write_led(button, 0);
           movement_delay = 3000; // delay moving right
           break;
 
-        case MAGNET_LEFT:
+        case PRIMO_MAGNET_LEFT:
           write_led(button, 0);
           movement_delay = 3000; // delay moving left
           break;     
 
-        case MAGNET_FUNCTION:
+        case PRIMO_MAGNET_FUNCTION:
           write_led(button, 0);
           led_fn_terminate = 0;
 
@@ -421,12 +421,12 @@ void loop (void)
           {
             if (!led_fn_terminate)
             {
-              if (check_button(12 + function_element) == MAGNET_NONE)
+              if (check_button(12 + function_element) == PRIMO_MAGNET_NONE)
                 led_fn_terminate = 1;
               else
               {
                 write_led(12 + function_element, 0);
-                if (check_button(12 + function_element) == MAGNET_FORWARD)
+                if (check_button(12 + function_element) == PRIMO_MAGNET_FORWARD)
                   delay (4500);
                 else
                   delay (3000);   // TODO handle delays during functions properly
@@ -437,14 +437,14 @@ void loop (void)
           // turn function lights back on after function executed
           for (function_element = 1; function_element <= 4; function_element++)
           {
-            if (check_button(12 + function_element) != MAGNET_NONE)
+            if (check_button(12 + function_element) != PRIMO_MAGNET_NONE)
             write_led(12 + function_element, 1);
           }
 
           movement_delay = 0;
           break;
 
-        case MAGNET_NONE:
+        case PRIMO_MAGNET_NONE:
           terminated = 1;
           break;
 
@@ -520,51 +520,51 @@ void initialise_packet (void)
 
   // Test command to execute a sequence of 16 movement commands,
   // to produce a figure-of-8 pattern.
-  packet[8] = FORWARD;
-  packet[9] = LEFT;
-  packet[10] = FORWARD;
-  packet[11] = LEFT;
-  packet[12] = FORWARD;
-  packet[13] = LEFT;
-  packet[14] = FORWARD;
-  packet[15] = RIGHT;
-  packet[16] = FORWARD;
-  packet[17] = RIGHT;
-  packet[18] = FORWARD;
-  packet[19] = RIGHT;
-  packet[20] = FORWARD;
-  packet[21] = RIGHT;
-  packet[22] = FORWARD;
-  packet[23] = LEFT;
+  packet[8] = PRIMO_COMMAND_FORWARD;
+  packet[9] = PRIMO_COMMAND_LEFT;
+  packet[10] = PRIMO_COMMAND_FORWARD;
+  packet[11] = PRIMO_COMMAND_LEFT;
+  packet[12] = PRIMO_COMMAND_FORWARD;
+  packet[13] = PRIMO_COMMAND_LEFT;
+  packet[14] = PRIMO_COMMAND_FORWARD;
+  packet[15] = PRIMO_COMMAND_RIGHT;
+  packet[16] = PRIMO_COMMAND_FORWARD;
+  packet[17] = PRIMO_COMMAND_RIGHT;
+  packet[18] = PRIMO_COMMAND_FORWARD;
+  packet[19] = PRIMO_COMMAND_RIGHT;
+  packet[20] = PRIMO_COMMAND_FORWARD;
+  packet[21] = PRIMO_COMMAND_RIGHT;
+  packet[22] = PRIMO_COMMAND_FORWARD;
+  packet[23] = PRIMO_COMMAND_LEFT;
 
-  //packet[8] = FORWARD;
-  //packet[9] = FORWARD;
-  //packet[10] = FORWARD;
-  //packet[11] = FORWARD;
-  //packet[12] = FORWARD;
-  //packet[13] = FORWARD;
-  //packet[14] = FORWARD;
-  //packet[15] = FORWARD;
-  //packet[16] = FORWARD;
-  //packet[17] = FORWARD;
-  //packet[18] = FORWARD;
-  //packet[19] = FORWARD;
-  //packet[20] = FORWARD;
-  //packet[21] = FORWARD;
-  //packet[22] = FORWARD;
-  //packet[23] = FORWARD;
+  //packet[8] = PRIMO_COMMAND_FORWARD;
+  //packet[9] = PRIMO_COMMAND_FORWARD;
+  //packet[10] = PRIMO_COMMAND_FORWARD;
+  //packet[11] = PRIMO_COMMAND_FORWARD;
+  //packet[12] = PRIMO_COMMAND_FORWARD;
+  //packet[13] = PRIMO_COMMAND_FORWARD;
+  //packet[14] = PRIMO_COMMAND_FORWARD;
+  //packet[15] = PRIMO_COMMAND_FORWARD;
+  //packet[16] = PRIMO_COMMAND_FORWARD;
+  //packet[17] = PRIMO_COMMAND_FORWARD;
+  //packet[18] = PRIMO_COMMAND_FORWARD;
+  //packet[19] = PRIMO_COMMAND_FORWARD;
+  //packet[20] = PRIMO_COMMAND_FORWARD;
+  //packet[21] = PRIMO_COMMAND_FORWARD;
+  //packet[22] = PRIMO_COMMAND_FORWARD;
+  //packet[23] = PRIMO_COMMAND_FORWARD;
 
   // Ensure any unused positions are empty,
   // as Cubetto doesn't know if this is the end of the list
   // or just a gap before more movement instructions.
-  packet[24] = STOP; 
-  packet[25] = STOP;
-  packet[26] = STOP;
-  packet[27] = STOP;
-  packet[28] = STOP;
-  packet[29] = STOP;
-  packet[30] = STOP;
-  packet[31] = STOP;
+  packet[24] = PRIMO_COMMAND_STOP; 
+  packet[25] = PRIMO_COMMAND_STOP;
+  packet[26] = PRIMO_COMMAND_STOP;
+  packet[27] = PRIMO_COMMAND_STOP;
+  packet[28] = PRIMO_COMMAND_STOP;
+  packet[29] = PRIMO_COMMAND_STOP;
+  packet[30] = PRIMO_COMMAND_STOP;
+  packet[31] = PRIMO_COMMAND_STOP;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,7 +573,7 @@ char check_button (char button_to_check)
 {
   // takes a button number (1-12 for standard buttons, 13-16 for the function buttons)
   
-  // returns the function for that button - FORWARD, LEFT, RIGHT, FUNCTION or NONE
+  // returns the function for that button - PRIMO_MAGNET_FORWARD, PRIMO_MAGNET_LEFT, PRIMO_MAGNET_RIGHT, PRIMO_MAGNET_FUNCTION or PRIMO_MAGNET_NONE
   
   // simplest way to process is in a case - only 16 possibilities!
   int hall_response;
@@ -697,25 +697,25 @@ char check_button (char button_to_check)
     switch (button)
     {
       case 2:
-        ret_val = invert_magnet ? MAGNET_FUNCTION : MAGNET_FUNCTION;
+        ret_val = invert_magnet ? PRIMO_MAGNET_FUNCTION : PRIMO_MAGNET_FUNCTION;
         break;
       case 3:
-        ret_val = invert_magnet ? MAGNET_RIGHT : MAGNET_FORWARD;
+        ret_val = invert_magnet ? PRIMO_MAGNET_RIGHT : PRIMO_MAGNET_FORWARD;
         break;
       case 4:
-        ret_val = invert_magnet ? MAGNET_FUNCTION : MAGNET_NONE;
+        ret_val = invert_magnet ? PRIMO_MAGNET_FUNCTION : PRIMO_MAGNET_NONE;
         break;
       case 5:
-        ret_val = invert_magnet ? MAGNET_LEFT : MAGNET_LEFT;
+        ret_val = invert_magnet ? PRIMO_MAGNET_LEFT : PRIMO_MAGNET_LEFT;
         break;
       case 6:
-        ret_val = invert_magnet ? MAGNET_FORWARD : MAGNET_RIGHT;
+        ret_val = invert_magnet ? PRIMO_MAGNET_FORWARD : PRIMO_MAGNET_RIGHT;
         break;
       case 7:
-        ret_val = MAGNET_NONE;
+        ret_val = PRIMO_MAGNET_NONE;
         break;
       default:
-        ret_val = MAGNET_NONE;
+        ret_val = PRIMO_MAGNET_NONE;
         break;
     }
 
