@@ -28,16 +28,6 @@ RF24 radio(7,8);                          // Set up nRF24L01 radio on SPI bus pl
 // Demonstrates another method of setting up the addresses
 byte address[][5] = { 0xCC,0xCE,0xCC,0xCE,0xCC , 0xCE,0xCC,0xCE,0xCC,0xCE};
 
-// Role management
-
-// Set up role.  This sketch uses the same software for all the nodes in this
-// system.  Doing so greatly simplifies testing.  The hardware itself specifies
-// which node it is.
-// This is done through the role_pin
-typedef enum { role_sender = 1, role_receiver } role_e;                 // The various roles supported by this sketch
-const char* role_friendly_name[] = { "invalid", "Sender", "Receiver"};  // The debug-friendly names of those roles
-role_e role;                                                            // The role of the current running sketch
-
 static uint32_t message_count = 0;
 
 
@@ -48,33 +38,27 @@ void setup(){
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
-  role = role_receiver;
-
-
   Serial.begin(115200);
   printf_begin();
   printf("\n\rRF24/examples/pingpair_irq/\n\r");
-  printf("ROLE: %s\n\r",role_friendly_name[role]);
+  printf("ROLE: Cubetto\n\r");
 
   // Setup and configure rf radio
   radio.begin();  
   //radio.setPALevel(RF24_PA_LOW);
   radio.enableAckPayload();                         // We will be using the Ack Payload feature, so please enable it
   radio.enableDynamicPayloads();                    // Ack payloads are dynamic payloads
-                                                    // Open pipes to other node for communication
-  if ( role == role_sender ) {                      // This simple sketch opens a pipe on a single address for these two nodes to 
-     radio.openWritingPipe(address[0]);             // communicate back and forth.  One listens on it, the other talks to it.
-     radio.openReadingPipe(1,address[1]); 
-  }else{
-    radio.openWritingPipe(address[1]);
-    radio.openReadingPipe(1,address[0]);
-    radio.startListening();
-    radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
-    ++message_count;        
-  }
+
+  // Open pipes to other node for communication
+  radio.openWritingPipe(address[1]);
+  radio.openReadingPipe(1,address[0]);
+  radio.startListening();
+  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+  ++message_count;        
+
   radio.printDetails();                             // Dump the configuration of the rf unit for debugging
   delay(50);
-  attachInterrupt(1, check_radio, LOW);             // Attach interrupt handler to interrupt #0 (using pin 2) on BOTH the sender and receiver
+  attachInterrupt(1, check_radio, LOW);             // Attach interrupt handler to interrupt #1 (using pin 2 on Arduino Leonardo)
 }
 
 
@@ -82,20 +66,8 @@ void setup(){
 /********************** Main Loop *********************/
 void loop() {
 
-
-  if (role == role_sender)  {                        // Sender role.  Repeatedly send the current time 
-    digitalWrite(LED_BUILTIN, HIGH);
-    unsigned long time = millis();                   // Take the time, and send it.
-    printf("Now sending %lu\n\r",time);
-    radio.startWrite( &time, sizeof(unsigned long) ,0);
-    delay(100);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(900);                                     // Try again soon
-  }
-
-
-  if(role == role_receiver){                        // Receiver does nothing except in IRQ
-  }  
+  // Receiver does nothing except in IRQ
+  
 }
 
 
@@ -108,31 +80,22 @@ void check_radio(void)                                // Receiver role: Does not
   radio.whatHappened(tx,fail,rx);                     // What happened?
   
   if ( tx ) {                                         // Have we successfully transmitted?
-      if ( role == role_sender ){   printf("Send:OK\n\r"); }
-      if ( role == role_receiver ){ printf("Ack Payload:Sent\n\r"); }
+      printf("Ack Payload:Sent\n\r");
   }
   
   if ( fail ) {                                       // Have we failed to transmit?
-      if ( role == role_sender ){   printf("Send:Failed\n\r");  }
-      if ( role == role_receiver ){ printf("Ack Payload:Failed\n\r");  }
+      printf("Ack Payload:Failed\n\r");
   }
   
   if ( rx || radio.available()){                      // Did we receive a message?
     
-    if ( role == role_sender ) {                      // If we're the sender, we've received an ack payload
-        radio.read(&message_count,sizeof(message_count));
-        printf("Ack:%lu\n\r",message_count);
-    }
-
-    
-    if ( role == role_receiver ) {                    // If we're the receiver, we've received a time message
-      digitalWrite(LED_BUILTIN, HIGH);
-      static unsigned long got_time;                  // Get this payload and dump it
-      radio.read( &got_time, sizeof(got_time) );
-      printf("Got payload %lu\n\r",got_time);
-      radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
-      ++message_count;                                // packet counter
-      digitalWrite(LED_BUILTIN, LOW);
-    }
+    // We've received a time message
+    digitalWrite(LED_BUILTIN, HIGH);
+    static unsigned long got_time;                  // Get this payload and dump it
+    radio.read( &got_time, sizeof(got_time) );
+    printf("Got payload %lu\n\r",got_time);
+    radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+    ++message_count;                                // packet counter
+    digitalWrite(LED_BUILTIN, LOW);
   }
 }
