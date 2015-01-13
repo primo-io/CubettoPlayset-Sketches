@@ -192,23 +192,23 @@ static long primo_random = 0;
 #define PRIMO_STEPPER_MAX_SPEED    1000   // Pulses per second.
 #define PRIMO_STEPPER_ACCELERATION 500    // Pulses per second.
 
-#define PRIMO_STEPPER_FORWARD 2700   // Total pulses.
-#define PRIMO_STEPPER_TURN    1170   // Total pulses.
+#define PRIMO_STEPPER_FORWARD_STEPS 2700   // Total pulses.
+#define PRIMO_STEPPER_TURN_STEPS    1170   // Total pulses.
 
 
 //
 // Hardware configuration
 //
 
-int in1Pin = 12;
-int in2Pin = 10;
-int in3Pin = 11;
-int in4Pin = 9;
+#define PRIMO_LEFT_STEPPER_PIN_1 12
+#define PRIMO_LEFT_STEPPER_PIN_2 10
+#define PRIMO_LEFT_STEPPER_PIN_3 11
+#define PRIMO_LEFT_STEPPER_PIN_4 9
 
-int on1Pin = 6;
-int on2Pin = 4;
-int on3Pin = 5;
-int on4Pin = 3;
+#define PRIMO_RIGHT_STEPPER_PIN_1 6
+#define PRIMO_RIGHT_STEPPER_PIN_2 4
+#define PRIMO_RIGHT_STEPPER_PIN_3 5
+#define PRIMO_RIGHT_STEPPER_PIN_4 3
 
 #define PRIMO_BUZZER_PIN 13
 
@@ -219,11 +219,11 @@ int on4Pin = 3;
 
 
 // Define a stepper and the pins it will use
-AccelStepper stepper_left(AccelStepper::HALF4WIRE, in1Pin, in2Pin, in3Pin, in4Pin);
-AccelStepper stepper_right(AccelStepper::HALF4WIRE, on1Pin, on2Pin, on3Pin, on4Pin);
+AccelStepper leftStepper(AccelStepper::HALF4WIRE, PRIMO_LEFT_STEPPER_PIN_1, PRIMO_LEFT_STEPPER_PIN_2, PRIMO_LEFT_STEPPER_PIN_3, PRIMO_LEFT_STEPPER_PIN_4);
+AccelStepper rightStepper(AccelStepper::HALF4WIRE, PRIMO_RIGHT_STEPPER_PIN_1, PRIMO_RIGHT_STEPPER_PIN_2, PRIMO_RIGHT_STEPPER_PIN_3, PRIMO_RIGHT_STEPPER_PIN_4);
 
-static bool stepper_left_moving = 0;
-static bool stepper_right_moving = 0;
+static bool leftStepperIsMoving = 0;
+static bool rightStepperIsMoving = 0;
 
 
 // Set up nRF24L01 radio on SPI bus plus pins 7 (CE) & 8 (CSN).
@@ -250,25 +250,25 @@ void playHappyTune(void);
 
 void setup (void)
 {
-  pinMode(in1Pin, OUTPUT);
-  pinMode(in2Pin, OUTPUT);
-  pinMode(in3Pin, OUTPUT);
-  pinMode(in4Pin, OUTPUT);
+  pinMode(PRIMO_LEFT_STEPPER_PIN_1, OUTPUT);
+  pinMode(PRIMO_LEFT_STEPPER_PIN_2, OUTPUT);
+  pinMode(PRIMO_LEFT_STEPPER_PIN_3, OUTPUT);
+  pinMode(PRIMO_LEFT_STEPPER_PIN_4, OUTPUT);
 
-  pinMode(on1Pin, OUTPUT);
-  pinMode(on2Pin, OUTPUT);
-  pinMode(on3Pin, OUTPUT);
-  pinMode(on4Pin, OUTPUT);
+  pinMode(PRIMO_RIGHT_STEPPER_PIN_1, OUTPUT);
+  pinMode(PRIMO_RIGHT_STEPPER_PIN_2, OUTPUT);
+  pinMode(PRIMO_RIGHT_STEPPER_PIN_2, OUTPUT);
+  pinMode(PRIMO_RIGHT_STEPPER_PIN_4, OUTPUT);
 
-  stepper_left.setMaxSpeed(PRIMO_STEPPER_MAX_SPEED);
-  stepper_right.setMaxSpeed(PRIMO_STEPPER_MAX_SPEED);
-  stepper_left.setAcceleration(PRIMO_STEPPER_ACCELERATION);
-  stepper_right.setAcceleration(PRIMO_STEPPER_ACCELERATION);
+  leftStepper.setMaxSpeed(PRIMO_STEPPER_MAX_SPEED);
+  rightStepper.setMaxSpeed(PRIMO_STEPPER_MAX_SPEED);
+  leftStepper.setAcceleration(PRIMO_STEPPER_ACCELERATION);
+  rightStepper.setAcceleration(PRIMO_STEPPER_ACCELERATION);
 
   // IMPORTANT stepper outputs are disabled here to minimise power usage whilst stationary,
   // as they are automatically enabled in the class constructor.
-  stepper_left.disableOutputs();
-  stepper_right.disableOutputs();
+  leftStepper.disableOutputs();
+  rightStepper.disableOutputs();
 
 
   //
@@ -356,11 +356,11 @@ void loop (void)
 
         // Carry out movement instructions here.
         // IMPORTANT stepper outputs are enabled/disabled to minimise power usage whilst stationary.
-        stepper_left.enableOutputs();
-        stepper_right.enableOutputs();
+        leftStepper.enableOutputs();
+        rightStepper.enableOutputs();
         move();
-        stepper_left.disableOutputs();
-        stepper_right.disableOutputs();
+        leftStepper.disableOutputs();
+        rightStepper.disableOutputs();
       }
     }
 
@@ -389,24 +389,24 @@ void move (void)
         break;
 
       case PRIMO_COMMAND_FORWARD:
-        stepper_left.move(-PRIMO_STEPPER_FORWARD);
-        stepper_right.move(PRIMO_STEPPER_FORWARD);
+        leftStepper.move(-PRIMO_STEPPER_FORWARD_STEPS);
+        rightStepper.move(PRIMO_STEPPER_FORWARD_STEPS);
         tone(PRIMO_BUZZER_PIN, 3000);
         delay(50);
         noTone(PRIMO_BUZZER_PIN);
         break;
 
       case PRIMO_COMMAND_LEFT:
-        stepper_left.move(-PRIMO_STEPPER_TURN);
-        stepper_right.move(-PRIMO_STEPPER_TURN);
+        leftStepper.move(-PRIMO_STEPPER_TURN_STEPS);
+        rightStepper.move(-PRIMO_STEPPER_TURN_STEPS);
         tone(PRIMO_BUZZER_PIN, 5000);
         delay(50);
         noTone(PRIMO_BUZZER_PIN);
         break;
 
       case PRIMO_COMMAND_RIGHT:
-        stepper_left.move(PRIMO_STEPPER_TURN);
-        stepper_right.move(PRIMO_STEPPER_TURN);
+        leftStepper.move(PRIMO_STEPPER_TURN_STEPS);
+        rightStepper.move(PRIMO_STEPPER_TURN_STEPS);
         tone(PRIMO_BUZZER_PIN, 4000);
         delay(50);
         noTone(PRIMO_BUZZER_PIN);
@@ -416,13 +416,13 @@ void move (void)
         break;
     }
 
-    stepper_left_moving = 1;
-    stepper_right_moving = 1;
+    leftStepperIsMoving = 1;
+    rightStepperIsMoving = 1;
 
-    while (stepper_left_moving || stepper_right_moving)
+    while (leftStepperIsMoving || rightStepperIsMoving)
     {
-      stepper_left_moving = stepper_left.run();
-      stepper_right_moving = stepper_right.run();
+      leftStepperIsMoving = leftStepper.run();
+      rightStepperIsMoving = rightStepper.run();
     }
   }
 }
