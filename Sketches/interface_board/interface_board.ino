@@ -73,9 +73,9 @@ MCP23S17 gpioExp3(&SPI, PRIMO_GPIOEXP3_SS_PIN, 0);
 MCP23S17 gpioExp4(&SPI, PRIMO_GPIOEXP4_SS_PIN, 0);
 
 // Remove // comments from following line to enable debug tracing.
-#define DEBUG_MODE 1
+#define PRIMO_DEBUG_MODE 1
 
-#ifdef DEBUG_MODE
+#ifdef PRIMO_DEBUG_MODE
 #define debug_printf printf
 #else
 #define debug_printf(...) ((void) 0)

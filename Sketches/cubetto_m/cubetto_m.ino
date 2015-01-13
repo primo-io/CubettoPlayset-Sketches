@@ -151,9 +151,9 @@
 
 
 // Remove // comments from following line to enable debug tracing.
-#define DEBUG_MODE 1
+#define PRIMO_DEBUG_MODE 1
 
-#ifdef DEBUG_MODE
+#ifdef PRIMO_DEBUG_MODE
 #define debug_printf printf
 #else
 #define debug_printf(...) ((void) 0)
