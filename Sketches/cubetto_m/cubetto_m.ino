@@ -241,10 +241,10 @@ volatile bool rx_event_handler_pending = 0;
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 
 // Interrupt handler, check the radio because we got an IRQ
-void check_radio(void);
+void checkRadio(void);
 
 // play a happy tune to indicate successful completion of a command sequence
-void happy(void);
+void playHappyTune(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -302,10 +302,10 @@ void setup (void)
 
   // Attach interrupt handler to interrupt #0 (using pin 2)
   // on BOTH the sender and receiver
-  attachInterrupt(1, check_radio, CHANGE);
+  attachInterrupt(1, checkRadio, CHANGE);
 
-  happy();
-  happy();
+  playHappyTune();
+  playHappyTune();
 
   delay(100);
 }
@@ -385,7 +385,7 @@ void move (void)
     switch (packet[i])
     {
       case PRIMO_COMMAND_STOP:
-        happy();
+        playHappyTune();
         break;
 
       case PRIMO_COMMAND_FORWARD:
@@ -429,7 +429,7 @@ void move (void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void check_radio (void)
+void checkRadio (void)
 {
   // What happened?
   bool tx, fail, rx;
@@ -468,7 +468,7 @@ void check_radio (void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void happy()
+void playHappyTune()
 {
   tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_B0, 150);
   delay(20);

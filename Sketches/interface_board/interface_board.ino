@@ -132,7 +132,7 @@ RF24 radio(7, 8);
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 
 // Interrupt handler, check the radio because we got an IRQ
-void check_radio(void);
+void checkRadio(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -170,7 +170,7 @@ void setup (void)
 
   // Attach interrupt handler to interrupt #1 (using pin 2)
   // on BOTH the sender and receiver
-  attachInterrupt(1, check_radio, FALLING);
+  attachInterrupt(1, checkRadio, FALLING);
 
 
   // Set up all the GPIO expanders
@@ -467,7 +467,7 @@ void loop (void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void check_radio (void)
+void checkRadio (void)
 {
   // What happened?
   bool tx, fail, rx;
