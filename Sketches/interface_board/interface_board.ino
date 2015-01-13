@@ -57,7 +57,10 @@
 #define PRIMO_MAGNET_FUNCTION 4
 #define PRIMO_MAGNET_ERR      5
 
-void write_led(char led_number, char onoff);
+#define PRIMO_LED_ON  0
+#define PRIMO_LED_OFF 1
+
+void writeLed(uint8_t ledNumber, uint8_t ledStatus);
 char check_button(char button_to_check);
 
 // define SS pins for GPIO expanders
@@ -207,7 +210,7 @@ void setup (void)
     // switch all LEDs on, delay for 100mS, then off
     for (i = 1; i <= 16; i++)
     {
-      write_led(i, 1);
+      writeLed(i, PRIMO_LED_ON);
     } 
 
     delay(100);
@@ -215,7 +218,7 @@ void setup (void)
     // switch all LEDs off
     for (i = 1; i <= 16; i++)
     {
-      write_led(i, 0);
+      writeLed(i, PRIMO_LED_OFF);
     } 
   }
 }
@@ -252,7 +255,7 @@ void loop (void)
   // switch all LEDs off
   for (i = 1; i <= 16; i++)
   {
-    write_led(i, 0);
+    writeLed(i, PRIMO_LED_OFF);
   }
 
   while (PRIMO_BBIT)
@@ -262,23 +265,23 @@ void loop (void)
       switch (check_button(button))
       {
         case PRIMO_MAGNET_FORWARD:
-          write_led(button, 1);
+          writeLed(button, PRIMO_LED_ON);
           break;
 
         case PRIMO_MAGNET_RIGHT:
-          write_led(button, 1);
+          writeLed(button, PRIMO_LED_ON);
           break;
 
         case PRIMO_MAGNET_LEFT:
-          write_led(button, 1);
+          writeLed(button, PRIMO_LED_ON);
           break;     
 
         case PRIMO_MAGNET_FUNCTION:
-          write_led(button, 1);
+          writeLed(button, PRIMO_LED_ON);
           break;
 
         case PRIMO_MAGNET_NONE:
-          write_led(button, 0);
+          writeLed(button, PRIMO_LED_OFF);
           break;
 
         default:
@@ -385,9 +388,9 @@ void loop (void)
   debugPrintf("Finished sending\n\r");
 
   // start lighting LEDs while we wait for the packet to be processed
-  //write_led(1, 1);
+  //writeLed(1, PRIMO_LED_ON);
   //delay (500);
-  //write_led(1, 0);
+  //writeLed(1, PRIMO_LED_OFF);
 
   terminated = 0;   // set at the first empty position to indicate end of the sequence
   led_fn_terminate = 0;
@@ -399,22 +402,22 @@ void loop (void)
       switch (check_button(button))
       {
         case PRIMO_MAGNET_FORWARD:
-          write_led(button, 0);
+          writeLed(button, PRIMO_LED_OFF);
           movement_delay = 4500; // delay moving forward
           break;
 
         case PRIMO_MAGNET_RIGHT:
-          write_led(button, 0);
+          writeLed(button, PRIMO_LED_OFF);
           movement_delay = 3000; // delay moving right
           break;
 
         case PRIMO_MAGNET_LEFT:
-          write_led(button, 0);
+          writeLed(button, PRIMO_LED_OFF);
           movement_delay = 3000; // delay moving left
           break;     
 
         case PRIMO_MAGNET_FUNCTION:
-          write_led(button, 0);
+          writeLed(button, PRIMO_LED_OFF);
           led_fn_terminate = 0;
 
           for (function_element = 1; function_element <= 4; function_element++)
@@ -425,7 +428,7 @@ void loop (void)
                 led_fn_terminate = 1;
               else
               {
-                write_led(12 + function_element, 0);
+                writeLed(12 + function_element, PRIMO_LED_OFF);
                 if (check_button(12 + function_element) == PRIMO_MAGNET_FORWARD)
                   delay (4500);
                 else
@@ -438,7 +441,7 @@ void loop (void)
           for (function_element = 1; function_element <= 4; function_element++)
           {
             if (check_button(12 + function_element) != PRIMO_MAGNET_NONE)
-            write_led(12 + function_element, 1);
+            writeLed(12 + function_element, PRIMO_LED_ON);
           }
 
           movement_delay = 0;
@@ -459,7 +462,7 @@ void loop (void)
   // switch all LEDs off
   for (i = 1; i <= 16; i++)
   {
-    write_led(i, 0);
+    writeLed(i, PRIMO_LED_OFF);
   } 
 
   //delay(1000);   // For user-button de-bounce etc.
@@ -726,76 +729,76 @@ char check_button (char button_to_check)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void write_led (char led_number, char onoff)
+void writeLed (uint8_t ledNumber, uint8_t ledStatus)
 {
-  // onoff = 1 to turn on, 0 for off
+  // ledStatus = PRIMO_LED_ON to turn on, PRIMO_LED_OFF for off
   
   //debug_printf("LED %x - %x\r\n",led_number,onoff);
 
-  switch (led_number)
+  switch (ledNumber)
   {
     case 1:
-      gpioExp1.digitalWrite(3, 1 - onoff);
+      gpioExp1.digitalWrite(3, ledStatus);
       break;
 
     case 2:
-      gpioExp1.digitalWrite(7, 1 - onoff);
+      gpioExp1.digitalWrite(7, ledStatus);
       break;
 
     case 3:
-      gpioExp1.digitalWrite(11, 1 - onoff);
+      gpioExp1.digitalWrite(11, ledStatus);
       break;
 
     case 4:
-      gpioExp1.digitalWrite(15, 1 - onoff);
+      gpioExp1.digitalWrite(15, ledStatus);
       break;
 
     case 5:
-      gpioExp2.digitalWrite(3, 1 - onoff);
+      gpioExp2.digitalWrite(3, ledStatus);
       break;
 
     case 6:
-      gpioExp2.digitalWrite(7, 1 - onoff);
+      gpioExp2.digitalWrite(7, ledStatus);
       break;
 
     case 7:
-      gpioExp2.digitalWrite(11, 1 - onoff);
+      gpioExp2.digitalWrite(11, ledStatus);
       break;
 
     case 8:
-      gpioExp2.digitalWrite(15, 1 - onoff);
+      gpioExp2.digitalWrite(15, ledStatus);
       break;
 
     case 9:
-      gpioExp3.digitalWrite(3, 1 - onoff);
+      gpioExp3.digitalWrite(3, ledStatus);
       break;
 
     case 10:
-      gpioExp3.digitalWrite(7, 1 - onoff);
+      gpioExp3.digitalWrite(7, ledStatus);
       break;
 
     case 11:
-      gpioExp3.digitalWrite(11, 1 - onoff);
+      gpioExp3.digitalWrite(11, ledStatus);
       break;
 
     case 12:
-      gpioExp3.digitalWrite(15, 1 - onoff);
+      gpioExp3.digitalWrite(15, ledStatus);
       break;
 
     case 13:
-      gpioExp4.digitalWrite(3, 1 - onoff);
+      gpioExp4.digitalWrite(3, ledStatus);
       break;
 
     case 14:
-      gpioExp4.digitalWrite(7, 1 - onoff);
+      gpioExp4.digitalWrite(7, ledStatus);
       break;
 
     case 15:
-      gpioExp4.digitalWrite(11, 1 - onoff);
+      gpioExp4.digitalWrite(11, ledStatus);
       break;
 
     case 16:
-      gpioExp4.digitalWrite(15, 1 - onoff);
+      gpioExp4.digitalWrite(15, ledStatus);
       break;
   }
 }
