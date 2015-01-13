@@ -76,9 +76,9 @@ MCP23S17 gpioExp4(&SPI, PRIMO_GPIOEXP4_SS_PIN, 0);
 #define PRIMO_DEBUG_MODE 1
 
 #ifdef PRIMO_DEBUG_MODE
-#define debug_printf printf
+#define debugPrintf printf
 #else
-#define debug_printf(...) ((void) 0)
+#define debugPrintf(...) ((void) 0)
 #endif
 
 // The nRF24l01 can accept up to 32 bytes in a single radio packet,
@@ -150,7 +150,7 @@ void setup (void)
   printf_begin();
 
   //while (Serial.read() == -1)
-  debug_printf("Cubetto Playset - Interface - Version %s\n\r", PRIMO_CUBETTO_PLAYSET_VERSION);
+  debugPrintf("Cubetto Playset - Interface - Version %s\n\r", PRIMO_CUBETTO_PLAYSET_VERSION);
 
 
   //
@@ -302,10 +302,10 @@ void loop (void)
 
   current_element = 8; // set to first movement element of the packet
   terminated = 0; // set at the first empty position to indicate end of the sequence#
-  debug_printf("hall1 = %X\r\n", gpioExp1.readPort());
-  debug_printf("hall2 = %X\r\n", gpioExp2.readPort());
-  debug_printf("hall3 = %X\r\n", gpioExp3.readPort());
-  debug_printf("hall4 = %X\r\n", gpioExp4.readPort());
+  debugPrintf("hall1 = %X\r\n", gpioExp1.readPort());
+  debugPrintf("hall2 = %X\r\n", gpioExp2.readPort());
+  debugPrintf("hall3 = %X\r\n", gpioExp3.readPort());
+  debugPrintf("hall4 = %X\r\n", gpioExp4.readPort());
 
   for (button = 1; button <= PRIMO_MAX_BUTTON; button++)
   {
@@ -366,23 +366,23 @@ void loop (void)
   while (current_element < PRIMO_MAX_BUTTON)
     packet[current_element++] = PRIMO_COMMAND_STOP;
 
-  debug_printf("Packet: ");
+  debugPrintf("Packet: ");
 
   for (i = 0; i < 24; i++)
   {
-    debug_printf("%x ", packet[i]);
+    debugPrintf("%x ", packet[i]);
   }
 
 
   //TODO - why do I have to send twice? 
 
-  debug_printf("\n\rNow sending packet\n\r");
+  debugPrintf("\n\rNow sending packet\n\r");
   radio.startWrite(packet, PRIMO_NRF24L01_MAX_PACKET_SIZE);
-  debug_printf("Finished sending\n\r");
+  debugPrintf("Finished sending\n\r");
 
-  debug_printf("\n\rNow sending packet\n\r");
+  debugPrintf("\n\rNow sending packet\n\r");
   radio.startWrite(packet, PRIMO_NRF24L01_MAX_PACKET_SIZE);
-  debug_printf("Finished sending\n\r");
+  debugPrintf("Finished sending\n\r");
 
   // start lighting LEDs while we wait for the packet to be processed
   //write_led(1, 1);
@@ -476,13 +476,13 @@ void checkRadio (void)
   // Have we successfully transmitted?
   if (tx)
   {
-    debug_printf("Send:OK\n\r");
+    debugPrintf("Send:OK\n\r");
   }
 
   // Have we failed to transmit?
   if (fail)
   {
-    debug_printf("Send:Failed\n\r");
+    debugPrintf("Send:Failed\n\r");
   }
 
   // Transmitter can power down for now, because
@@ -494,7 +494,7 @@ void checkRadio (void)
   if (rx)
   {
     radio.read(&ackMessageCount, sizeof(ackMessageCount));
-    debug_printf("Ack:%lu\n\r", ackMessageCount);
+    debugPrintf("Ack:%lu\n\r", ackMessageCount);
   }
 }
 
@@ -691,7 +691,7 @@ char check_button (char button_to_check)
       button = t_button; 
     }
 
-    debug_printf("read button %X, hall = %X, button is %X\n\r", button_to_check, hall_response, button);
+    debugPrintf("read button %X, hall = %X, button is %X\n\r", button_to_check, hall_response, button);
 
     // convert to button codes
     switch (button)
@@ -719,7 +719,7 @@ char check_button (char button_to_check)
         break;
     }
 
-  debug_printf("found button %X\n\r", ret_val);
+  debugPrintf("found button %X\n\r", ret_val);
 
   return ret_val;
 }

@@ -154,9 +154,9 @@
 #define PRIMO_DEBUG_MODE 1
 
 #ifdef PRIMO_DEBUG_MODE
-#define debug_printf printf
+#define debugPrintf printf
 #else
-#define debug_printf(...) ((void) 0)
+#define debugPrintf(...) ((void) 0)
 #endif
 
 
@@ -279,7 +279,7 @@ void setup (void)
   printf_begin();
 
   //while (Serial.read()== -1)
-  debug_printf("Cubetto Playset - Cubetto Robot - Version %s\n\r", PRIMO_CUBETTO_PLAYSET_VERSION);
+  debugPrintf("Cubetto Playset - Cubetto Robot - Version %s\n\r", PRIMO_CUBETTO_PLAYSET_VERSION);
 
 
   //
@@ -325,14 +325,14 @@ void loop (void)
     long packet_id = 0;
     long packet_random = 0;
 
-    debug_printf("Event Handler start\n\r");
+    debugPrintf("Event Handler start\n\r");
 
-    debug_printf("packet");
+    debugPrintf("packet");
     for (i = 0; i < 32; i++)
     {
-      debug_printf(" %x", packet[i]);
+      debugPrintf(" %x", packet[i]);
     }
-    debug_printf("\n\r");
+    debugPrintf("\n\r");
 
     memcpy(&packet_id, (const long*) &packet[0], 4);
     memcpy(&packet_random, (const long*) &packet[4], 4);
@@ -340,19 +340,19 @@ void loop (void)
     // Check the packet is valid.
     if (packet_id == PRIMO_ID)
     {
-      debug_printf("PRIMO_ID good\n\r");
+      debugPrintf("PRIMO_ID good\n\r");
 
       if (primo_random == 0)
       {
         // (The UID could be used to set the packet address in the radio, but this would
         // make it necessary to un-pair Primo/Cubetto at BOTH ends).
         primo_random = packet_random;
-        debug_printf("PRIMO_RANDOM set\n\r");
+        debugPrintf("PRIMO_RANDOM set\n\r");
       }
 
       if (primo_random == packet_random)
       {
-        debug_printf("PRIMO_RANDOM good\n\r");
+        debugPrintf("PRIMO_RANDOM good\n\r");
 
         // Carry out movement instructions here.
         // IMPORTANT stepper outputs are enabled/disabled to minimise power usage whilst stationary.
@@ -364,7 +364,7 @@ void loop (void)
       }
     }
 
-    debug_printf("Event Handler end\n\r");
+    debugPrintf("Event Handler end\n\r");
 
     // Finally clear the event flag, so that the next interrupt event can register.
     rx_event_handler_pending = 0;
@@ -435,18 +435,18 @@ void checkRadio (void)
   bool tx, fail, rx;
   radio.whatHappened(tx, fail, rx);
 
-  debug_printf("Got Interupt from the Radio\n\r");
+  debugPrintf("Got Interupt from the Radio\n\r");
 
   // Have we successfully transmitted?
   if (tx)
   {
-    debug_printf("Ack Payload:Sent\n\r");
+    debugPrintf("Ack Payload:Sent\n\r");
   }
 
   // Have we failed to transmit?
   if (fail)
   {
-    debug_printf("Ack Payload:Failed\n\r");
+    debugPrintf("Ack Payload:Failed\n\r");
   }
 
   // Did we receive a message?
@@ -457,7 +457,7 @@ void checkRadio (void)
 
     // Get this payload and dump it
     radio.read(packet, PRIMO_NRF24L01_MAX_PACKET_SIZE);
-    debug_printf("Got payload\n\r");
+    debugPrintf("Got payload\n\r");
 
     // Add an ack packet for the next time around.  This is a simple
     // packet counter
