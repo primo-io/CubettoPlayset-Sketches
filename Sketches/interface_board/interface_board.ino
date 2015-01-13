@@ -222,7 +222,7 @@ void setup (void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static uint32_t message_count = 0;
+static uint32_t ackMessageCount = 0;
 static char current_element;
 static char function_element;
 static char button;
@@ -493,8 +493,8 @@ void check_radio (void)
   // Did we receive a message?
   if (rx)
   {
-    radio.read(&message_count, sizeof(message_count));
-    debug_printf("Ack:%lu\n\r", message_count);
+    radio.read(&ackMessageCount, sizeof(ackMessageCount));
+    debug_printf("Ack:%lu\n\r", ackMessageCount);
   }
 }
 

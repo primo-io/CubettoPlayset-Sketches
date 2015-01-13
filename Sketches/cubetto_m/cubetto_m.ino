@@ -312,7 +312,7 @@ void setup (void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static uint32_t message_count = 0;
+static uint32_t ackMessageCount = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -461,8 +461,8 @@ void check_radio (void)
 
     // Add an ack packet for the next time around.  This is a simple
     // packet counter
-    radio.writeAckPayload(1, &message_count, sizeof(message_count));
-    ++message_count;
+    radio.writeAckPayload(1, &ackMessageCount, sizeof(ackMessageCount));
+    ++ackMessageCount;
   }
 }
 
