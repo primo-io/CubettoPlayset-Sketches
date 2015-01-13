@@ -47,7 +47,7 @@
 
 
 // version numbering
-#define PRIMO_VERSION 2
+#define PRIMO_CUBETTO_PLAYSET_VERSION "1.0"
 
 // define magnetic switches
 #define PRIMO_MAGNET_NONE     0
@@ -150,7 +150,7 @@ void setup (void)
   printf_begin();
 
   //while (Serial.read() == -1)
-  debug_printf("ROLE: Primo - Version %d\n\r", PRIMO_VERSION);
+  debug_printf("Cubetto Playset - Interface - Version %s\n\r", PRIMO_CUBETTO_PLAYSET_VERSION);
 
 
   //

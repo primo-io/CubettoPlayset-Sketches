@@ -56,7 +56,7 @@
 
 
 // version number
-#define PRIMO_VERSION 1
+#define PRIMO_CUBETTO_PLAYSET_VERSION "1.0"
 
 // sounds - move to sounds.h
 #define PRIMO_NOTE_B0  31
@@ -279,7 +279,7 @@ void setup (void)
   printf_begin();
 
   //while (Serial.read()== -1)
-  debug_printf("ROLE: Cubetto - Version %d\n\r", PRIMO_VERSION);
+  debug_printf("Cubetto Playset - Cubetto Robot - Version %s\n\r", PRIMO_CUBETTO_PLAYSET_VERSION);
 
 
   //
