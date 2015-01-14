@@ -1,52 +1,26 @@
-// Bare-bones code for Cubetto.
+// Primo - Cubetto Playset
+//    Bare-bones code for the Cubetto Robot
+
 // Responds to a sequence of movement commands sent by radio.
-// (See also primo_dom. Bare-bones code to send movement commands).
 
-// Uses Olimex 32u4 Leonardo boards, with nRf24l01 radio.
-
-// Note that relaible radio performance requires that all connections to the radio use short wires
-// and soldered joints.
-
-// Pin-name Colour   Leonardo    nRF24L01
-
-// MOSI     Blue     4(ICSP)     6
-// MISO     Red      1(ICSP)     7
-// SCK      Green    3(ICSP)     5
-// CE       Orange   7(DIGITAL)  3
-// CSN      Yellow   8(DIGITAL)  4
-// IRQ      White    2(DIGITAL)  8
-// GND      Black    GND(POWER)  1
-// 3v3      Red      3v3(POWER)  2
-
-// Note that these connections differ from the original RF24 library examples.
-// (RF24 library must be installed).
-
-// This code includes a mechanism for Primo/Cubetto to pair
-// When a Cubetto is powered-on, it is unpaired and will accept input from any Primo.
-// When a Primo is powered on, it generates a 32-bit random number to use as its Unique ID (UID).
-// Every radio message that a Primo sends includes this UID.
-// A Cubetto, on receiving its first radio message, records this UID,
+// This code includes a mechanism for Interface/Cubetto Robot to pair.
+// When a Cubetto Robot is powered-on, it is unpaired and will accept input from
+// any Interface.  When an Interface is powered on, it generates a 32-bit random
+// number to use as its session Unique ID (UID).
+// Every radio message that an Interface sends includes this UID.
+// A Cubetto Robot, on receiving its first radio message, records this UID,
 // and subsequently ignores messages from any other UID.
 // A devices's UID is forgotten when it is powered off.
 
-// Normal usage of Primo/Cubetto:
-// 1. Power-on Cubetto.
-// 2. Send a message from Primo.
+// Normal usage of Interface/Cubetto Robot:
+// 1. Power-on Cubetto Robot.
+// 2. Send a message from the Interface.
 // 3. These devices are now paired.
-// (4). Repeat 1 & 2 for any other Primos & Cubettos.
-// (5). Power-off a Cubetto to un-pair (Primo is unaware of pairings, so no need to power-off).
+// (4). Repeat 1 & 2 for any other Interfaces & Cubetto Robots.
+// (5). Power-off a Cubetto Robot to un-pair (the Interface is unaware of
+//      pairings, so no need to power-off).
 
-// Uses AccelStepper Library
-// (AccelStepper library must be installed).
-
-
-// Ideally Cubetto would have a user-operated 'power' momentary push-button attached to an interrupt,
-// along with an LED internal to the the push-button or adjacent to it.
-// Operating the push-button would cause Cubetto to 'wake' for a timed period (eg. 1 hour),
-// with 'awake' indicated by the LED.
-// A timer expiring would cause Cubetto to sleep the Atmel uC (and nRF24l01),
-// unless the 'power' button is pressed again
-
+////////////////////////////////////////////////////////////////////////////////
 
 #include <AccelStepper.h>
 #include <SPI.h>
