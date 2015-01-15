@@ -30,6 +30,14 @@ void simulateFunction(CommandsMessage &commandsMsg)
 {
   for (int instrIdx = 0; instrIdx < PRIMO_MAX_FUNCTION_INSTRUCTIONS; ++instrIdx)
   {
+    if (commandsMsg.functionInstructions[instrIdx] == PRIMO_COMMAND_FUNCTION)
+    {
+      // Function recursive calls are allowed (infinite loop in our case)
+      setFunctionLeds(commandsMsg);
+      instrIdx = -1;
+      continue;
+    }
+
     uint32_t movementDelay = getMovementDelay(commandsMsg.functionInstructions[instrIdx]);
 
     if (movementDelay)

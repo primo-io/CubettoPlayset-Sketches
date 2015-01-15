@@ -2,37 +2,35 @@ bool checkCommands (CommandsMessage &msgToCheck)
 {
   for (int instrIdx = 0; instrIdx < PRIMO_MAX_MAIN_INSTRUCTIONS; ++instrIdx)
   {
-    switch (msgToCheck.mainInstructions[instrIdx])
-    {
-      case PRIMO_COMMAND_NONE :
-      case PRIMO_COMMAND_RIGHT :
-      case PRIMO_COMMAND_LEFT :
-      case PRIMO_COMMAND_FORWARD :
-      case PRIMO_COMMAND_FUNCTION :
-        break;
-
-      default :
-        return false;
-    }
+    if (!checkValidCommand(msgToCheck.mainInstructions[instrIdx]))
+      return false;
   }
 
   for (int instrIdx = 0; instrIdx < PRIMO_MAX_FUNCTION_INSTRUCTIONS; ++instrIdx)
   {
-    switch (msgToCheck.functionInstructions[instrIdx])
-    {
-      case PRIMO_COMMAND_NONE :
-      case PRIMO_COMMAND_RIGHT :
-      case PRIMO_COMMAND_LEFT :
-      case PRIMO_COMMAND_FORWARD :
-        break;
-
-      case PRIMO_COMMAND_FUNCTION :
-      default :
-        return false;
-    }
+    if (!checkValidCommand(msgToCheck.functionInstructions[instrIdx]))
+      return false;
   }
   
   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool checkValidCommand(uint8_t cmdCode)
+{
+  switch (cmdCode)
+  {
+    case PRIMO_COMMAND_NONE :
+    case PRIMO_COMMAND_RIGHT :
+    case PRIMO_COMMAND_LEFT :
+    case PRIMO_COMMAND_FORWARD :
+    case PRIMO_COMMAND_FUNCTION :
+      return true;
+
+    default :
+      return false;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,33 +50,6 @@ bool executeInstructions (CommandsMessage &commandsMsg)
   {
     switch (commandsMsg.mainInstructions[instrIdx])
     {
-//      case PRIMO_COMMAND_FORWARD :
-//        leftStepper.move(-PRIMO_STEPPER_FORWARD_STEPS);
-//        rightStepper.move(PRIMO_STEPPER_FORWARD_STEPS);
-//        tone(PRIMO_BUZZER_PIN, 3000);
-//        delay(50);
-//        noTone(PRIMO_BUZZER_PIN);
-//        oneOrMoreCommandsExecuted = true;
-//        break;
-//
-//      case PRIMO_COMMAND_LEFT :
-//        leftStepper.move(-PRIMO_STEPPER_TURN_STEPS);
-//        rightStepper.move(-PRIMO_STEPPER_TURN_STEPS);
-//        tone(PRIMO_BUZZER_PIN, 5000);
-//        delay(50);
-//        noTone(PRIMO_BUZZER_PIN);
-//        oneOrMoreCommandsExecuted = true;
-//        break;
-//
-//      case PRIMO_COMMAND_RIGHT :
-//        leftStepper.move(PRIMO_STEPPER_TURN_STEPS);
-//        rightStepper.move(PRIMO_STEPPER_TURN_STEPS);
-//        tone(PRIMO_BUZZER_PIN, 4000);
-//        delay(50);
-//        noTone(PRIMO_BUZZER_PIN);
-//        oneOrMoreCommandsExecuted = true;
-//        break;
-
       case PRIMO_COMMAND_FUNCTION :
         if (executeFunction(commandsMsg))
           oneOrMoreCommandsExecuted = true;
@@ -92,8 +63,6 @@ bool executeInstructions (CommandsMessage &commandsMsg)
         }
         break;
     }
- 
-//    runBothSteppers();
   }
 
   if (oneOrMoreCommandsExecuted)
@@ -110,6 +79,13 @@ bool executeFunction (CommandsMessage &commandsMsg)
 
   for (int instrIdx = 0; instrIdx < PRIMO_MAX_FUNCTION_INSTRUCTIONS; ++instrIdx)
   {
+    if (commandsMsg.functionInstructions[instrIdx] == PRIMO_COMMAND_FUNCTION)
+    {
+      // Function recursive calls are allowed (infinite loop in our case)
+      instrIdx = -1;
+      continue;
+    }
+
     if (setMovementAndBeep(commandsMsg.functionInstructions[instrIdx]))
     {
       runBothSteppers();
