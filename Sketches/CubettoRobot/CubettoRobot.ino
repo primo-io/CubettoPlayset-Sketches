@@ -133,10 +133,7 @@ void setup()
   // Attach interrupt handler to interrupt #1 (using pin 2 on Arduino Leonardo)
   attachInterrupt(1, checkRadio, LOW);
   
-  playHappyTune();
-  delay(50);
-  playHappyTune();
-  delay(50);
+  playPowerOnTune();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -15,6 +15,7 @@ void checkRadio(void)
   if (fail)
   {
     debugPrintf("Message transmission failed\n\r");
+    radio.flush_tx();
     sendingMessage = false;
   }
   
