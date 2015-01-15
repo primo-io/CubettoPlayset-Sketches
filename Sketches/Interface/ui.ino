@@ -1,72 +1,114 @@
+void readAllBlocks(CommandsMessage &commandsMsg)
+{
+  uint16_t instructionBlocks1 = gpioExp1.readPort();
+  uint16_t instructionBlocks2 = gpioExp2.readPort();
+  uint16_t instructionBlocks3 = gpioExp3.readPort();
+  uint16_t functionBlocks = gpioExp4.readPort();
+
+  commandsMsg.mainInstructions[0] = ~instructionBlocks1 & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.mainInstructions[1] = ~(instructionBlocks1 >> 4) & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.mainInstructions[2] = ~(instructionBlocks1 >> 8) & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.mainInstructions[3] = ~(instructionBlocks1 >> 12) & PRIMO_BLOCK_INPUT_MASK;
+
+  commandsMsg.mainInstructions[4] = swapBits(~instructionBlocks2);
+  commandsMsg.mainInstructions[5] = swapBits(~instructionBlocks2 >> 4);
+  commandsMsg.mainInstructions[6] = swapBits(~instructionBlocks2 >> 8);
+  commandsMsg.mainInstructions[7] = rotateBits(~instructionBlocks2 >> 12);
+
+  commandsMsg.mainInstructions[8] = ~instructionBlocks3 & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.mainInstructions[9] = ~(instructionBlocks3 >> 4) & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.mainInstructions[10] = ~(instructionBlocks3 >> 8) & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.mainInstructions[11] = ~(instructionBlocks3 >> 12) & PRIMO_BLOCK_INPUT_MASK;
+
+  commandsMsg.functionInstructions[0] = ~functionBlocks & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.functionInstructions[1] = ~(functionBlocks >> 4) & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.functionInstructions[2] = ~(functionBlocks >> 8) & PRIMO_BLOCK_INPUT_MASK;
+  commandsMsg.functionInstructions[3] = ~(functionBlocks >> 12) & PRIMO_BLOCK_INPUT_MASK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint8_t swapBits (uint8_t value)
+{
+  // Swap bits 0 and 2 (bit 3 is preserved, all other bits are cleared)
+  return ((value & 0x04) >> 2) | (value & 0x02) | ((value & 0x01) << 2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint8_t rotateBits (uint8_t value)
+{
+  // Rotate the 3 LSBs (all other bits are cleared)
+  return ((value & 0x06) >> 1) | ((value & 0x01) << 2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void writeLed (uint8_t ledNumber, uint8_t ledStatus)
 {
-  // ledStatus = PRIMO_LED_ON to turn on, PRIMO_LED_OFF for off
-  
-  //debug_printf("LED %x - %x\r\n",led_number,onoff);
-
   switch (ledNumber)
   {
-    case 1:
+    case 0 :
       gpioExp1.digitalWrite(3, ledStatus);
       break;
 
-    case 2:
+    case 1 :
       gpioExp1.digitalWrite(7, ledStatus);
       break;
 
-    case 3:
+    case 2 :
       gpioExp1.digitalWrite(11, ledStatus);
       break;
 
-    case 4:
+    case 3 :
       gpioExp1.digitalWrite(15, ledStatus);
       break;
 
-    case 5:
+    case 4 :
       gpioExp2.digitalWrite(3, ledStatus);
       break;
 
-    case 6:
+    case 5 :
       gpioExp2.digitalWrite(7, ledStatus);
       break;
 
-    case 7:
+    case 6 :
       gpioExp2.digitalWrite(11, ledStatus);
       break;
 
-    case 8:
+    case 7 :
       gpioExp2.digitalWrite(15, ledStatus);
       break;
 
-    case 9:
+    case 8 :
       gpioExp3.digitalWrite(3, ledStatus);
       break;
 
-    case 10:
+    case 9 :
       gpioExp3.digitalWrite(7, ledStatus);
       break;
 
-    case 11:
+    case 10 :
       gpioExp3.digitalWrite(11, ledStatus);
       break;
 
-    case 12:
+    case 11 :
       gpioExp3.digitalWrite(15, ledStatus);
       break;
 
-    case 13:
+    case 12 :
       gpioExp4.digitalWrite(3, ledStatus);
       break;
 
-    case 14:
+    case 13 :
       gpioExp4.digitalWrite(7, ledStatus);
       break;
 
-    case 15:
+    case 14 :
       gpioExp4.digitalWrite(11, ledStatus);
       break;
 
-    case 16:
+    case 15 :
       gpioExp4.digitalWrite(15, ledStatus);
       break;
   }
@@ -77,7 +119,7 @@ void writeLed (uint8_t ledNumber, uint8_t ledStatus)
 void switchAllLedsOn()
 {
   for (int i = 0; i < 16;)
-    writeLed(++i, PRIMO_LED_ON);
+    writeLed(i++, PRIMO_LED_ON);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,163 +127,47 @@ void switchAllLedsOn()
 void switchAllLedsOff()
 {
   for (int i = 0; i < 16;)
-    writeLed(++i, PRIMO_LED_OFF);
+    writeLed(i++, PRIMO_LED_OFF);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char check_button (char button_to_check)
+void setAllLeds (CommandsMessage &commandsMsg)
 {
-  // takes a button number (1-12 for standard buttons, 13-16 for the function buttons)
-  
-  // returns the function for that button - PRIMO_MAGNET_FORWARD, PRIMO_MAGNET_LEFT, PRIMO_MAGNET_RIGHT, PRIMO_MAGNET_FUNCTION or PRIMO_MAGNET_NONE
-  
-  // simplest way to process is in a case - only 16 possibilities!
-  int hall_response;
-  char button, t_button;
-  char ret_val;
-  char invert_magnet; // used for line 2, as the magnets are inserted 'upside down'
-  char twisted; // one of the sensors is twisted - swap a couple of bits
-
-  // debug_printf("Checking button\r\n");
-
-  invert_magnet = 0;
-  twisted = 0;
-
-  switch (button_to_check)
+  for (int instrIdx = 0; instrIdx < PRIMO_MAX_MAIN_INSTRUCTIONS; ++instrIdx)
   {
-    case 1:
-      hall_response = gpioExp1.readPort();
-      button = (hall_response & 0x0F);
-      break;
-
-    case 2:
-      hall_response = gpioExp1.readPort();
-      button = (hall_response >> 4) & 0x0F;
-      break;
-
-    case 3:
-      hall_response = gpioExp1.readPort();
-      button = (hall_response >> 8) & 0x0F;
-      break;
-
-    case 4:
-      hall_response = gpioExp1.readPort();
-      button = (hall_response >> 12) & 0x0F;
-      break;
-
-    case 5:
-      hall_response = gpioExp2.readPort();
-      button = (hall_response) & 0x0F;
-      invert_magnet = 1;
-      break;
-
-    case 6:
-      hall_response = gpioExp2.readPort();
-      button = (hall_response >> 4) & 0x0F;
-      invert_magnet = 1;
-      break;
-
-    case 7:
-      hall_response = gpioExp2.readPort();
-      button = (hall_response >> 8) & 0x0F;
-      invert_magnet = 1;
-      break;
-
-    case 8:
-      hall_response = gpioExp2.readPort();
-      button = (hall_response >> 12) & 0x0F;
-      invert_magnet = 1;
-      twisted = 1;
-      break;
-
-    case 9:
-      hall_response = gpioExp3.readPort();
-      button = (hall_response) & 0x0F;
-      break;
-
-    case 10:
-      hall_response = gpioExp3.readPort();
-      button = (hall_response >> 4) & 0x0F;
-      break;
-
-    case 11:
-      hall_response = gpioExp3.readPort();
-      button = (hall_response >> 8) & 0x0F;
-      break;
-
-    case 12:
-      hall_response = gpioExp3.readPort();
-      button = (hall_response >> 12) & 0x0F;
-      break;
-
-    case 13:
-      hall_response = gpioExp4.readPort();
-      button = (hall_response) & 0x0F;
-      break;
-
-    case 14:
-      hall_response = gpioExp4.readPort();
-      button = (hall_response >> 4) & 0x0F;
-      break;
-
-    case 15:
-      hall_response = gpioExp4.readPort();
-      button = (hall_response >> 8) & 0x0F;
-      break;
-
-    case 16:
-      hall_response = gpioExp4.readPort();
-      button = (hall_response >> 12) & 0x0F;
-      break;
-
-    default:
-      hall_response = 0;
-      button = 0;
-      break;
-    }
-
-    // only bottom 3 bits have hall data
-    button = button & 0x07;
-
-    // untwist bits
-    if (twisted)
+    switch (commandsMsg.mainInstructions[instrIdx])
     {
-      t_button = ((button & 0x01) + ((button & 0x02) << 1) + ((button & 0x04) >> 1));
-      //debug_printf("button %X, t_button is %X\n\r", button, t_button);
-      button = t_button; 
+      case PRIMO_COMMAND_RIGHT :
+      case PRIMO_COMMAND_LEFT :
+      case PRIMO_COMMAND_FORWARD :
+      case PRIMO_COMMAND_FUNCTION :
+        writeLed(instrIdx, PRIMO_LED_ON);
+        break;
+
+      case PRIMO_COMMAND_NONE :
+      default :
+        writeLed(instrIdx, PRIMO_LED_OFF);
+        break;
     }
+  }
 
-    debugPrintf("read button %X, hall = %X, button is %X\n\r", button_to_check, hall_response, button);
-
-    // convert to button codes
-    switch (button)
+  for (int instrIdx = 0; instrIdx < PRIMO_MAX_FUNCTION_INSTRUCTIONS; ++instrIdx)
+  {
+    switch (commandsMsg.functionInstructions[instrIdx])
     {
-      case 2:
-        ret_val = invert_magnet ? PRIMO_MAGNET_FUNCTION : PRIMO_MAGNET_FUNCTION;
+      case PRIMO_COMMAND_RIGHT :
+      case PRIMO_COMMAND_LEFT :
+      case PRIMO_COMMAND_FORWARD :
+        writeLed(instrIdx + PRIMO_MAX_MAIN_INSTRUCTIONS, PRIMO_LED_ON);
         break;
-      case 3:
-        ret_val = invert_magnet ? PRIMO_MAGNET_RIGHT : PRIMO_MAGNET_FORWARD;
-        break;
-      case 4:
-        ret_val = invert_magnet ? PRIMO_MAGNET_FUNCTION : PRIMO_MAGNET_NONE;
-        break;
-      case 5:
-        ret_val = invert_magnet ? PRIMO_MAGNET_LEFT : PRIMO_MAGNET_LEFT;
-        break;
-      case 6:
-        ret_val = invert_magnet ? PRIMO_MAGNET_FORWARD : PRIMO_MAGNET_RIGHT;
-        break;
-      case 7:
-        ret_val = PRIMO_MAGNET_NONE;
-        break;
-      default:
-        ret_val = PRIMO_MAGNET_NONE;
+
+      case PRIMO_COMMAND_NONE :
+      case PRIMO_COMMAND_FUNCTION :
+      default :
+        writeLed(instrIdx + PRIMO_MAX_MAIN_INSTRUCTIONS, PRIMO_LED_OFF);
         break;
     }
-
-  debugPrintf("found button %X\n\r", ret_val);
-
-  return ret_val;
+  }
 }
 

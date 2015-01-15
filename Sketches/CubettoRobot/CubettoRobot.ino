@@ -22,36 +22,38 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <AccelStepper.h>
 #include <SPI.h>
-#include "nRF24L01.h"
-#include "RF24.h"
-#include "printf.h"
+#include <nRF24L01.h>
+#include <RF24.h>
+#include <printf.h>
+#include <AccelStepper.h>
 
 #include "Primo.h"
 #include "sound.h"
 
+////////////////////////////////////////////////////////////////////////////////
 
-// Remove // comments from following line to enable debug tracing.
-#define PRIMO_DEBUG_MODE 1
+#define PRIMO_DEBUG_MODE
 
 #ifdef PRIMO_DEBUG_MODE
 #define debugPrintf printf
+#define debugMessage dumpMessage
 #else
 #define debugPrintf(...) ((void) 0)
+#define debugMessage(...) ((void) 0)
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
 
-#define PRIMO_STEPPER_MAX_SPEED    1000   // Pulses per second.
-#define PRIMO_STEPPER_ACCELERATION 500    // Pulses per second.
+// Set up nRF24L01 radio on SPI bus pins 7 (CE) and 8 (CSN)
+RF24 radio(7, 8);
 
-#define PRIMO_STEPPER_FORWARD_STEPS 2700   // Total pulses.
-#define PRIMO_STEPPER_TURN_STEPS    1170   // Total pulses.
+// Flag to signal between interrupt handler and main event loop
+volatile bool noMessageReceived = true;
 
+CommandsMessage commandsMsg;
 
-//
-// Hardware configuration
-//
+////////////////////////////////////////////////////////////////////////////////
 
 #define PRIMO_LEFT_STEPPER_PIN_1 12
 #define PRIMO_LEFT_STEPPER_PIN_2 10
@@ -63,41 +65,22 @@
 #define PRIMO_RIGHT_STEPPER_PIN_3 5
 #define PRIMO_RIGHT_STEPPER_PIN_4 3
 
-//int on1Pin = 6;
-//int on2Pin = 5;
-//int on3Pin = 4;
-//int on4Pin = 3;
+#define PRIMO_STEPPER_MAX_SPEED    1000
+#define PRIMO_STEPPER_ACCELERATION 500
 
+#define PRIMO_STEPPER_FORWARD_STEPS 2700
+#define PRIMO_STEPPER_TURN_STEPS    1170
 
 // Define a stepper and the pins it will use
 AccelStepper leftStepper(AccelStepper::HALF4WIRE, PRIMO_LEFT_STEPPER_PIN_1, PRIMO_LEFT_STEPPER_PIN_2, PRIMO_LEFT_STEPPER_PIN_3, PRIMO_LEFT_STEPPER_PIN_4);
 AccelStepper rightStepper(AccelStepper::HALF4WIRE, PRIMO_RIGHT_STEPPER_PIN_1, PRIMO_RIGHT_STEPPER_PIN_2, PRIMO_RIGHT_STEPPER_PIN_3, PRIMO_RIGHT_STEPPER_PIN_4);
 
-static bool leftStepperIsMoving = 0;
-static bool rightStepperIsMoving = 0;
-
-
-// Set up nRF24L01 radio on SPI bus plus pins 7 (CE) & 8 (CSN).
-RF24 radio(7, 8);
-
-
-//
-// Topology
-//
-
-// Flag to signal between interrupt handler and main event loop.
-volatile bool rx_event_handler_pending = 0;
-
-// Interrupt handler, check the radio because we got an IRQ
-void checkRadio(void);
-
-// play a happy tune to indicate successful completion of a command sequence
-void playHappyTune(void);
-
 ////////////////////////////////////////////////////////////////////////////////
 
-void setup (void)
+void setup()
 {
+  pinMode(PRIMO_BUZZER_PIN, OUTPUT);
+
   pinMode(PRIMO_LEFT_STEPPER_PIN_1, OUTPUT);
   pinMode(PRIMO_LEFT_STEPPER_PIN_2, OUTPUT);
   pinMode(PRIMO_LEFT_STEPPER_PIN_3, OUTPUT);
@@ -105,116 +88,68 @@ void setup (void)
 
   pinMode(PRIMO_RIGHT_STEPPER_PIN_1, OUTPUT);
   pinMode(PRIMO_RIGHT_STEPPER_PIN_2, OUTPUT);
-  pinMode(PRIMO_RIGHT_STEPPER_PIN_2, OUTPUT);
+  pinMode(PRIMO_RIGHT_STEPPER_PIN_3, OUTPUT);
   pinMode(PRIMO_RIGHT_STEPPER_PIN_4, OUTPUT);
+
+  // IMPORTANT Stepper outputs are disabled here to minimise power usage whilst
+  // stationary, as they are automatically enabled in the AccelStepper class
+  // constructor
+  leftStepper.disableOutputs();
+  rightStepper.disableOutputs();
 
   leftStepper.setMaxSpeed(PRIMO_STEPPER_MAX_SPEED);
   rightStepper.setMaxSpeed(PRIMO_STEPPER_MAX_SPEED);
   leftStepper.setAcceleration(PRIMO_STEPPER_ACCELERATION);
   rightStepper.setAcceleration(PRIMO_STEPPER_ACCELERATION);
 
-  // IMPORTANT stepper outputs are disabled here to minimise power usage whilst stationary,
-  // as they are automatically enabled in the class constructor.
-  leftStepper.disableOutputs();
-  rightStepper.disableOutputs();
-
-
-  //
-  // Print preamble
-  //
-
-  Serial.begin(57600);
+  Serial.begin(115200);
   printf_begin();
-
-  //while (Serial.read()== -1)
-  debugPrintf("Cubetto Playset - Cubetto Robot - Version %s\n\r", PRIMO_CUBETTO_PLAYSET_VERSION);
-
+  debugPrintf("Cubetto Playset - Cubetto Robot\n\rVersion %s\n\r", PRIMO_CUBETTO_PLAYSET_VERSION);
 
   //
-  // Setup and configure rf radio
+  // Setup and configure RF radio module
   //
-
+ 
   radio.begin();
+  //radio.setPALevel(RF24_PA_LOW);
 
-  // We will be using the Ack Payload feature, so please enable it
+  // Use the ACK payload feature (ACK payloads are dynamic payloads)
   radio.enableAckPayload();
+  radio.enableDynamicPayloads();
 
-  // Open pipes to other nodes for communication
-  radio.openReadingPipe(1, pipe);
+  // Open pipes to other node for communication
+  radio.openWritingPipe(PRIMO_CUBETTO2INTERFACE_PIPE_ADDRESS);
+  radio.openReadingPipe(1, PRIMO_INTERFACE2CUBETTO_PIPE_ADDRESS);
 
-  // Start listening
   radio.startListening();
+ 
+  // Add an ACK packet for the next time around
+  writeAckPayload();
 
-  // Dump the configuration of the rf unit for debugging
+  // Dump the configuration of the RF module for debugging
   radio.printDetails();
+  delay(50);
 
-  // Attach interrupt handler to interrupt #0 (using pin 2)
-  // on BOTH the sender and receiver
-  attachInterrupt(1, checkRadio, CHANGE);
-
+  // Attach interrupt handler to interrupt #1 (using pin 2 on Arduino Leonardo)
+  attachInterrupt(1, checkRadio, LOW);
+  
   playHappyTune();
+  delay(50);
   playHappyTune();
-
-  delay(100);
+  delay(50);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void loop (void)
+void loop()
 {
-  // Check if there is an Rx event to handle.
-  if (rx_event_handler_pending == 1)
-  {
-    int i;
-    long packet_id = 0;
-    long packet_random = 0;
+  if (noMessageReceived)
+    return;
 
-    debugPrintf("Event Handler start\n\r");
+  debugMessage(commandsMsg);
 
-    debugPrintf("packet");
-    for (i = 0; i < 32; i++)
-    {
-      debugPrintf(" %x", packet[i]);
-    }
-    debugPrintf("\n\r");
+  executeInstructions(commandsMsg);
 
-    memcpy(&packet_id, (const long*) &packet[0], 4);
-    memcpy(&packet_random, (const long*) &packet[4], 4);
-
-    // Check the packet is valid.
-    if (packet_id == PRIMO_ID)
-    {
-      debugPrintf("PRIMO_ID good\n\r");
-
-      if (sessionId == 0)
-      {
-        // (The UID could be used to set the packet address in the radio, but this would
-        // make it necessary to un-pair Primo/Cubetto at BOTH ends).
-        sessionId = packet_random;
-        debugPrintf("PRIMO_RANDOM set\n\r");
-      }
-
-      if (sessionId == packet_random)
-      {
-        debugPrintf("PRIMO_RANDOM good\n\r");
-
-        // Carry out movement instructions here.
-        // IMPORTANT stepper outputs are enabled/disabled to minimise power usage whilst stationary.
-        leftStepper.enableOutputs();
-        rightStepper.enableOutputs();
-        move();
-        leftStepper.disableOutputs();
-        rightStepper.disableOutputs();
-      }
-    }
-
-    debugPrintf("Event Handler end\n\r");
-
-    // Finally clear the event flag, so that the next interrupt event can register.
-    rx_event_handler_pending = 0;
-
-    // FIXME Would it be better to disable the radiointerrupt in the interrupt handler,
-    // and re-enable it here?
-  }
+  noMessageReceived = true;
 }
 

@@ -97,16 +97,37 @@
 
 void playHappyTune()
 {
-  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_B0, 150);
-  delay(20);
+//  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_B0, 150);
+//  delay(20);
+//
+//  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_E7, 600);
+//  delay(40);
+//
+//  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_D3, 150);
+//  delay(20);
+//
+//  //tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_C8, 500);
+//  //delay(10);
 
-  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_E7, 600);
-  delay(40);
+  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_C6);
+  delay(150);
+  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_E6);
+  delay(150);
+  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_G6);
+  delay(100);
+  noTone(PRIMO_BUZZER_PIN);
+}
 
-  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_D3, 150);
-  delay(20);
+////////////////////////////////////////////////////////////////////////////////
 
-  //tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_C8, 500);
-  //delay(10);
+void playSadTune()
+{
+  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_G5);
+  delay(150);
+  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_DS5);
+  delay(150);
+  tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_C5);
+  delay(300);
+  noTone(PRIMO_BUZZER_PIN);
 }
 

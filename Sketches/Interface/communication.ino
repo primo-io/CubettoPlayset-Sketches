@@ -1,100 +1,55 @@
-void checkRadio()
+void checkRadio(void)
 {
-  bool tx, fail, rx;
+  bool tx,fail,rx;
 
   radio.whatHappened(tx, fail, rx);
-
+  
   // Have we successfully transmitted?
   if (tx)
   {
     debugPrintf("Message sent\n\r");
+    sendingMessage = false;
   }
 
   // Have we failed to transmit?
   if (fail)
   {
     debugPrintf("Message transmission failed\n\r");
+    sendingMessage = false;
   }
-
-  // Transmitter can power down for now, because
-  // the transmission is done.
-  if (tx || fail)
-    radio.powerDown();
-
+  
   // Did we receive a message?
-  if (rx)
+  if (rx || radio.available())
   {
-    radio.read(&ackMessageCount, sizeof(ackMessageCount));
-    debugPrintf("Got ACK: %lu\n\r", ackMessageCount);
+    // We've received an ACK payload
+    AckMessage ackMsg;
+    radio.read(&ackMsg, sizeof(ackMsg));
+    
+    debugPrintf("Got ACK\n\r  Sender ID: %lu\n\r  Session ID: %lu\n\r  Message counter: %lu\n\r", ackMsg.senderId, ackMsg.sessionId, ackMsg.messageCounter);
+
+    if ((ackMsg.senderId == PRIMO_CUBETTO_ROBOT_ID) &&
+        ((ackMsg.sessionId == sessionId) || ((ackMsg.sessionId == 0UL) && ((ackMsg.messageCounter == 0UL) || (ackMsg.messageCounter == 1UL)))))
+      ackReceived = true;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void initialise_packet()
+void sendCommandsToCubetto(CommandsMessage &commandsMsg)
 {
-  long primo_id = PRIMO_ID;
+  commandsMsg.senderId = PRIMO_INTERFACE_ID;
+  commandsMsg.sessionId = sessionId;
 
-  // Set the random number that will be used to uniquely identify THIS primo.
-  // Note that random() actually returns a pseudo-random sequence.
-  // randomSeed() ensures that each device initialises its sequence
-  // to a fairly random noise source
-  randomSeed(analogRead(0));
-  sessionId = random();
-  
-  // Set the universal Primo ID, and the unique ID for this primo into the packet.
-  // These values can be re-used in every packet sent.
-  // (The UID could be used to set the packet address in the radio, but this would 
-  // make it necessary to un-pair Primo/Cubetto at BOTH ends).
-  memcpy(&packet[0], (const char*) &primo_id, 4);
-  memcpy(&packet[4], (const char*) &sessionId, 4);
+  uint8_t checksumAccumulator = 0x00;
+  uint8_t *msgPtr = (uint8_t *) &commandsMsg;
 
-  // Test command to execute a sequence of 16 movement commands,
-  // to produce a figure-of-8 pattern.
-  packet[8] = PRIMO_COMMAND_FORWARD;
-  packet[9] = PRIMO_COMMAND_LEFT;
-  packet[10] = PRIMO_COMMAND_FORWARD;
-  packet[11] = PRIMO_COMMAND_LEFT;
-  packet[12] = PRIMO_COMMAND_FORWARD;
-  packet[13] = PRIMO_COMMAND_LEFT;
-  packet[14] = PRIMO_COMMAND_FORWARD;
-  packet[15] = PRIMO_COMMAND_RIGHT;
-  packet[16] = PRIMO_COMMAND_FORWARD;
-  packet[17] = PRIMO_COMMAND_RIGHT;
-  packet[18] = PRIMO_COMMAND_FORWARD;
-  packet[19] = PRIMO_COMMAND_RIGHT;
-  packet[20] = PRIMO_COMMAND_FORWARD;
-  packet[21] = PRIMO_COMMAND_RIGHT;
-  packet[22] = PRIMO_COMMAND_FORWARD;
-  packet[23] = PRIMO_COMMAND_LEFT;
+  for (int idx = 0; idx < sizeof(commandsMsg) - sizeof(commandsMsg.checksum); ++idx)
+    checksumAccumulator += *(msgPtr++);
 
-  //packet[8] = PRIMO_COMMAND_FORWARD;
-  //packet[9] = PRIMO_COMMAND_FORWARD;
-  //packet[10] = PRIMO_COMMAND_FORWARD;
-  //packet[11] = PRIMO_COMMAND_FORWARD;
-  //packet[12] = PRIMO_COMMAND_FORWARD;
-  //packet[13] = PRIMO_COMMAND_FORWARD;
-  //packet[14] = PRIMO_COMMAND_FORWARD;
-  //packet[15] = PRIMO_COMMAND_FORWARD;
-  //packet[16] = PRIMO_COMMAND_FORWARD;
-  //packet[17] = PRIMO_COMMAND_FORWARD;
-  //packet[18] = PRIMO_COMMAND_FORWARD;
-  //packet[19] = PRIMO_COMMAND_FORWARD;
-  //packet[20] = PRIMO_COMMAND_FORWARD;
-  //packet[21] = PRIMO_COMMAND_FORWARD;
-  //packet[22] = PRIMO_COMMAND_FORWARD;
-  //packet[23] = PRIMO_COMMAND_FORWARD;
+  commandsMsg.checksum = checksumAccumulator;
 
-  // Ensure any unused positions are empty,
-  // as Cubetto doesn't know if this is the end of the list
-  // or just a gap before more movement instructions.
-  packet[24] = PRIMO_COMMAND_STOP; 
-  packet[25] = PRIMO_COMMAND_STOP;
-  packet[26] = PRIMO_COMMAND_STOP;
-  packet[27] = PRIMO_COMMAND_STOP;
-  packet[28] = PRIMO_COMMAND_STOP;
-  packet[29] = PRIMO_COMMAND_STOP;
-  packet[30] = PRIMO_COMMAND_STOP;
-  packet[31] = PRIMO_COMMAND_STOP;
+  ackReceived = false;
+  sendingMessage = true;
+  radio.startWrite(&commandsMsg, sizeof(commandsMsg), 0);
 }
 
