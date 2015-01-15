@@ -1,4 +1,4 @@
-void readAllBlocks(CommandsMessage &commandsMsg)
+void readAllBlocks (CommandsMessage &commandsMsg)
 {
   uint16_t instructionBlocks1 = gpioExp1.readPort();
   uint16_t instructionBlocks2 = gpioExp2.readPort();
@@ -24,6 +24,39 @@ void readAllBlocks(CommandsMessage &commandsMsg)
   commandsMsg.functionInstructions[1] = ~(functionBlocks >> 4) & PRIMO_BLOCK_INPUT_MASK;
   commandsMsg.functionInstructions[2] = ~(functionBlocks >> 8) & PRIMO_BLOCK_INPUT_MASK;
   commandsMsg.functionInstructions[3] = ~(functionBlocks >> 12) & PRIMO_BLOCK_INPUT_MASK;
+
+  filterInvalidInstructions(commandsMsg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void filterInvalidInstructions (CommandsMessage &commandsMsg)
+{
+  int instrIdx = 0;
+  
+  while (instrIdx < PRIMO_MAX_MAIN_INSTRUCTIONS)
+  {
+    if (isKnownInstruction(commandsMsg.mainInstructions[instrIdx]))
+      ++instrIdx;
+    else
+      break;
+  }
+  
+  while (instrIdx < PRIMO_MAX_MAIN_INSTRUCTIONS)
+    commandsMsg.mainInstructions[instrIdx++] = PRIMO_COMMAND_NONE;
+
+  instrIdx = 0;
+  
+  while (instrIdx < PRIMO_MAX_FUNCTION_INSTRUCTIONS)
+  {
+    if (isKnownInstruction(commandsMsg.functionInstructions[instrIdx]))
+      ++instrIdx;
+    else
+      break;
+  }
+  
+  while (instrIdx < PRIMO_MAX_FUNCTION_INSTRUCTIONS)
+    commandsMsg.functionInstructions[instrIdx++] = PRIMO_COMMAND_NONE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,42 +165,63 @@ void switchAllLedsOff()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void setAllLeds (CommandsMessage &commandsMsg)
+void flashLed (uint8_t ledNumber, uint32_t flashingTime)
 {
-  for (int instrIdx = 0; instrIdx < PRIMO_MAX_MAIN_INSTRUCTIONS; ++instrIdx)
-  {
-    switch (commandsMsg.mainInstructions[instrIdx])
-    {
-      case PRIMO_COMMAND_RIGHT :
-      case PRIMO_COMMAND_LEFT :
-      case PRIMO_COMMAND_FORWARD :
-      case PRIMO_COMMAND_FUNCTION :
-        writeLed(instrIdx, PRIMO_LED_ON);
-        break;
+  uint32_t flashingStopMillis = millis() + flashingTime;
+  uint32_t nextChangeMillis = 0UL;
+  uint8_t ledStatus = PRIMO_LED_OFF;
 
-      case PRIMO_COMMAND_NONE :
-      default :
-        writeLed(instrIdx, PRIMO_LED_OFF);
-        break;
+  while(millis() < flashingStopMillis)
+  {
+    if (millis() > nextChangeMillis)
+    {
+      writeLed(ledNumber, ledStatus);
+
+      ledStatus = (ledStatus == PRIMO_LED_ON ? PRIMO_LED_OFF : PRIMO_LED_ON);
+    
+      nextChangeMillis = millis() + PRIMO_LED_FLASHING_SEMIPERIOD;
     }
   }
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+void setAllLeds (CommandsMessage &commandsMsg)
+{
+  setMainLeds(commandsMsg);
+  setFunctionLeds(commandsMsg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void setMainLeds(CommandsMessage &commandsMsg)
+{
+  for (int instrIdx = 0; instrIdx < PRIMO_MAX_MAIN_INSTRUCTIONS; ++instrIdx)
+    writeLed(instrIdx, (isKnownInstruction(commandsMsg.mainInstructions[instrIdx]) ? PRIMO_LED_ON : PRIMO_LED_OFF));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void setFunctionLeds(CommandsMessage &commandsMsg)
+{
   for (int instrIdx = 0; instrIdx < PRIMO_MAX_FUNCTION_INSTRUCTIONS; ++instrIdx)
-  {
-    switch (commandsMsg.functionInstructions[instrIdx])
-    {
-      case PRIMO_COMMAND_RIGHT :
-      case PRIMO_COMMAND_LEFT :
-      case PRIMO_COMMAND_FORWARD :
-        writeLed(instrIdx + PRIMO_MAX_MAIN_INSTRUCTIONS, PRIMO_LED_ON);
-        break;
+    writeLed(PRIMO_MAX_MAIN_INSTRUCTIONS + instrIdx, (isKnownInstruction(commandsMsg.functionInstructions[instrIdx]) ? PRIMO_LED_ON : PRIMO_LED_OFF));
+}
 
-      case PRIMO_COMMAND_NONE :
-      case PRIMO_COMMAND_FUNCTION :
-      default :
-        writeLed(instrIdx + PRIMO_MAX_MAIN_INSTRUCTIONS, PRIMO_LED_OFF);
-        break;
-    }
+////////////////////////////////////////////////////////////////////////////////
+
+bool isKnownInstruction(uint8_t instrCode)
+{
+  switch (instrCode)
+  {
+    case PRIMO_COMMAND_RIGHT :
+    case PRIMO_COMMAND_LEFT :
+    case PRIMO_COMMAND_FORWARD :
+    case PRIMO_COMMAND_FUNCTION :
+      return true;
+
+    default :
+      return false;
   }
 }
 

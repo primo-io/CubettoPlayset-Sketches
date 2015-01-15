@@ -79,6 +79,8 @@ MCP23S17 gpioExp4(&SPI, PRIMO_GPIOEXP4_SS_PIN, 0);
 #define PRIMO_LED_ON  0
 #define PRIMO_LED_OFF 1
 
+#define PRIMO_LED_FLASHING_SEMIPERIOD 250UL
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void setup()
