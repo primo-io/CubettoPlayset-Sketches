@@ -186,24 +186,13 @@ void setup (void)
   // This code always sends the same movement commands.
   initialise_packet();
 
-  int led_loop, i;
-  for (led_loop = 1; led_loop <= 3; led_loop++)
+  for (int ledLoop = 0; ledLoop < 3; ++ledLoop)
   {
+    // Switch all LEDs on, delay for 100ms, then off
+    if (ledLoop) delay(100);
+    switchAllLedsOn(); 
     delay(100);
-
-    // switch all LEDs on, delay for 100mS, then off
-    for (i = 1; i <= 16; i++)
-    {
-      writeLed(i, PRIMO_LED_ON);
-    } 
-
-    delay(100);
-
-    // switch all LEDs off
-    for (i = 1; i <= 16; i++)
-    {
-      writeLed(i, PRIMO_LED_OFF);
-    } 
+    switchAllLedsOff(); 
   }
 }
 
@@ -236,11 +225,7 @@ void loop (void)
   //}
   //debug_printf("!PRIMO_BBIT finished");
 
-  // switch all LEDs off
-  for (i = 1; i <= 16; i++)
-  {
-    writeLed(i, PRIMO_LED_OFF);
-  }
+  switchAllLedsOff(); 
 
   while (PRIMO_BBIT)
   {
@@ -443,11 +428,7 @@ void loop (void)
     }
   }
       
-  // switch all LEDs off
-  for (i = 1; i <= 16; i++)
-  {
-    writeLed(i, PRIMO_LED_OFF);
-  } 
+  switchAllLedsOff(); 
 
   //delay(1000);   // For user-button de-bounce etc.
 }
@@ -785,5 +766,21 @@ void writeLed (uint8_t ledNumber, uint8_t ledStatus)
       gpioExp4.digitalWrite(15, ledStatus);
       break;
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void switchAllLedsOn()
+{
+  for (int i = 0; i < 16;)
+    writeLed(++i, PRIMO_LED_ON);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void switchAllLedsOff()
+{
+  for (int i = 0; i < 16;)
+    writeLed(++i, PRIMO_LED_OFF);
 }
 
