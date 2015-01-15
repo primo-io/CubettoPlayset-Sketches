@@ -403,45 +403,6 @@ void move (void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void checkRadio (void)
-{
-  // What happened?
-  bool tx, fail, rx;
-  radio.whatHappened(tx, fail, rx);
-
-  debugPrintf("Got Interupt from the Radio\n\r");
-
-  // Have we successfully transmitted?
-  if (tx)
-  {
-    debugPrintf("Ack Payload:Sent\n\r");
-  }
-
-  // Have we failed to transmit?
-  if (fail)
-  {
-    debugPrintf("Ack Payload:Failed\n\r");
-  }
-
-  // Did we receive a message?
-  if (rx)
-  {
-    // Signal the main event loop that there is an Rx event to handle.
-    rx_event_handler_pending = 1;
-
-    // Get this payload and dump it
-    radio.read(packet, PRIMO_NRF24L01_MAX_PACKET_SIZE);
-    debugPrintf("Got payload\n\r");
-
-    // Add an ack packet for the next time around.  This is a simple
-    // packet counter
-    radio.writeAckPayload(1, &ackMessageCount, sizeof(ackMessageCount));
-    ++ackMessageCount;
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void playHappyTune()
 {
   tone(PRIMO_BUZZER_PIN, PRIMO_NOTE_B0, 150);
