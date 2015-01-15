@@ -34,27 +34,3 @@ $RECYCLE.BIN/
 
 *~
 .~*
-
-# KiCad exclusions
-_autosave*
-*.000
-*.bak
-*.bck
-*.lst
-*.kicad_pcb-bak
-*.net
-*.dsn
-*.ses
-*.ps
-*.pdf
-*.gbl
-*.gbs
-*.gbo
-*.gbr
-*.gtl
-*.gts
-*.gto
-*.drl
-*.csv
-*.ods
-*.xls
