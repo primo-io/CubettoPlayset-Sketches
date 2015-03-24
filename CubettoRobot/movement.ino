@@ -11,7 +11,7 @@ bool checkCommands (CommandsMessage &msgToCheck)
     if (!checkValidCommand(msgToCheck.functionInstructions[instrIdx]))
       return false;
   }
-  
+
   return true;
 }
 
@@ -92,7 +92,7 @@ bool executeFunction (CommandsMessage &commandsMsg)
       oneOrMoreCommandsExecuted = true;
     }
   }
-  
+
   return oneOrMoreCommandsExecuted;
 }
 
@@ -157,5 +157,31 @@ void runBothSteppers()
 
   leftStepper.disableOutputs();
   rightStepper.disableOutputs();
+}
+
+/////////////////////////////////// INACTIVITY FUNCTIONS ////////////////////////////
+
+void checkInactivity() {
+  if (isInactive()) {
+    inactiveSignal();
+    timeStamp = millis();
+  }
+}
+
+void inactiveSignal() {
+  playHappyTune();
+}
+
+boolean isInactive() {
+  boolean b = false;
+
+  long inactiveTime = (millis() - timeStamp);
+  
+  if (inactiveTime > inactiveTimeLimit) {
+    b = true;
+  } else {
+    b = false;
+  }
+  return b;
 }
 

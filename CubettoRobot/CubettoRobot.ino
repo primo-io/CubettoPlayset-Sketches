@@ -75,6 +75,11 @@ CommandsMessage commandsMsg;
 AccelStepper leftStepper(AccelStepper::HALF4WIRE, PRIMO_LEFT_STEPPER_PIN_1, PRIMO_LEFT_STEPPER_PIN_2, PRIMO_LEFT_STEPPER_PIN_3, PRIMO_LEFT_STEPPER_PIN_4);
 AccelStepper rightStepper(AccelStepper::HALF4WIRE, PRIMO_RIGHT_STEPPER_PIN_1, PRIMO_RIGHT_STEPPER_PIN_2, PRIMO_RIGHT_STEPPER_PIN_3, PRIMO_RIGHT_STEPPER_PIN_4);
 
+//check inactivity and beep if inactive for too long
+//time limit is 2 minutes (120 seconds)
+long inactiveTimeLimit = 120000;
+long timeStamp = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void setup()
@@ -140,8 +145,12 @@ void setup()
 
 void loop()
 {
-  if (noMessageReceived)
+  if (noMessageReceived) {    
+    checkInactivity();
     return;
+  }
+    
+  timeStamp = millis();
 
   debugMessage(commandsMsg);
 
