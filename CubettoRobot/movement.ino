@@ -169,7 +169,13 @@ void checkInactivity() {
 }
 
 void inactiveSignal() {
-  playHappyTune();
+  leftStepper.move(-PRIMO_STEPPER_TURN_STEPS / 2);
+  rightStepper.move(-PRIMO_STEPPER_TURN_STEPS / 2);
+  runBothSteppers();
+  playSadTune();
+  leftStepper.move(PRIMO_STEPPER_TURN_STEPS / 2);
+  rightStepper.move(PRIMO_STEPPER_TURN_STEPS / 2);
+  runBothSteppers();
 }
 
 boolean isInactive() {
