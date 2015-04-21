@@ -107,27 +107,21 @@ bool setMovementAndBeep(uint8_t command)
     case PRIMO_COMMAND_FORWARD :
       leftStepper.move(-PRIMO_STEPPER_FORWARD_STEPS);
       rightStepper.move(PRIMO_STEPPER_FORWARD_STEPS);
-      tone(PRIMO_BUZZER_PIN, 3000);
-      delay(50);
-      noTone(PRIMO_BUZZER_PIN);
+      playForwardTune();
       moveCommandRecognized = true;
       break;
 
     case PRIMO_COMMAND_LEFT :
       leftStepper.move(-PRIMO_STEPPER_TURN_STEPS);
       rightStepper.move(-PRIMO_STEPPER_TURN_STEPS);
-      tone(PRIMO_BUZZER_PIN, 5000);
-      delay(50);
-      noTone(PRIMO_BUZZER_PIN);
+      playLeftTune();
       moveCommandRecognized = true;
       break;
 
     case PRIMO_COMMAND_RIGHT :
       leftStepper.move(PRIMO_STEPPER_TURN_STEPS);
       rightStepper.move(PRIMO_STEPPER_TURN_STEPS);
-      tone(PRIMO_BUZZER_PIN, 4000);
-      delay(50);
-      noTone(PRIMO_BUZZER_PIN);
+      playRightTune();      
       moveCommandRecognized = true;
       break;
 

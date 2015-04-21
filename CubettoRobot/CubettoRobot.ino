@@ -139,7 +139,7 @@ void setup()
   // Attach interrupt handler to interrupt #1 (using pin 2 on Arduino Leonardo)
   attachInterrupt(1, checkRadio, LOW);
   
-  playPowerOnTune();
+  playHappyTune();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +150,7 @@ void loop()
     checkInactivity();
     return;
   }
-    
+  
   timeStamp = millis();
 
   debugMessage(commandsMsg);
@@ -159,4 +159,5 @@ void loop()
 
   noMessageReceived = true;
 }
+
 
